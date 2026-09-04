@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>睡觉起床计算器</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                     "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f4f6f8;
+        color: #222;
+    }
+
+    .container {
+        max-width: 650px;
+        margin: 30px auto;
+        padding: 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 18px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #666;
+        margin-bottom: 25px;
+    }
+
+    h2 {
+        font-size: 18px;
+        margin-top: 0;
+    }
+
+    .row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+    }
+
+    .field {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-size: 16px;
+    }
+
+    button {
+        border: none;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 15px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    .primary {
+        background: #2563eb;
+        color: white;
+        width: 100%;
+    }
+
+    .secondary {
+        background: #e5e7eb;
+        color: #222;
+    }
+
+    .danger {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .wake-item {
+        border: 1px solid #eee;
+        padding: 15px;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        background: #fafafa;
+    }
+
+    .wake-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 12px;
+        background: #eff6ff;
+        text-align: center;
+    }
+
+    .big-result {
+        font-size: 32px;
+        font-weight: bold;
+        margin: 10px 0;
+        color: #1d4ed8;
+    }
+
+    .detail {
+        color: #555;
+        line-height: 1.7;
+    }
+
+    .divider {
+        border: none;
+        border-top: 1px solid #eee;
+        margin: 25px 0;
+    }
+
+    .small {
+        font-size: 13px;
+        color: #777;
+    }
+
+    @media (max-width: 500px) {
+        .container {
+            padding: 12px;
+        }
+
+        .card {
+            padding: 18px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>😴 睡觉起床计算器</h1>
+
+    <div class="subtitle">
+        自动扣除中间起夜时间，计算实际睡眠时长
+    </div>
+
+
+    <div class="card">
+
+        <h2>1️⃣ 睡眠设置</h2>
+
+        <div class="row">
+
+            <div class="field">
+                <label>首次入睡时间</label>
+                <input type="time" id="sleepStart">
+            </div>
+
+            <div class="field">
+                <label>目标睡眠时间（小时）</label>
+                <input
+                    type="number"
+                    id="targetSleep"
+                    value="8"
+                    min="1"
+                    max="24"
+                    step="0.1"
+                >
+            </div>
+
+        </div>
+
+        <p class="small">
+            默认目标睡眠时间为 8 小时，可自行修改。
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>2️⃣ 中间起夜记录</h2>
+
+        <div id="wakeList"></div>
+
+        <button class="secondary" onclick="addWakePeriod()">
+            + 添加一次起夜
+        </button>
+
+        <p class="small">
+            每次填写「醒来时间」和「再次入睡时间」。
+            可以添加多次。
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>3️⃣ 计算应该几点起床</h2>
+
+        <button class="primary" onclick="calculateWakeTime()">
+            计算起床时间
+        </button>
+
+        <div class="result" id="wakeResult" style="display:none;">
+            <div>为了睡满目标时间，你应该在</div>
+
+            <div class="big-result" id="recommendedWake"></div>
+
+            <div class="detail" id="wakeDetail"></div>
+        </div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>4️⃣ 已知起床时间，计算实际睡眠</h2>
+
+        <div class="field">
+            <label>最终起床时间</label>
+            <input type="time" id="finalWake">
+        </div>
+
+        <button class="primary" onclick="calculateActualSleep()">
+            计算今晚睡了多久
+        </button>
+
+        <div class="result" id="sleepResult" style="display:none;">
+            <div>你的实际睡眠时间</div>
+
+            <div class="big-result" id="actualSleep"></div>
+
+            <div class="detail" id="sleepDetail"></div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+================================================
+时间处理工具
+================================================
+*/
+
+/*
+把 HH:MM 转换成当天的分钟数
+例如：
+23:30 -> 1410
+01:00 -> 60
+*/
+
+function timeToMinutes(time) {
+
+    if (!time) return null;
+
+    const parts = time.split(":");
+
+    const hour = parseInt(parts[0]);
+    const minute = parseInt(parts[1]);
+
+    return hour * 60 + minute;
+}
+
+
+/*
+格式化分钟数
+
+例如：
+90 -> 1小时30分钟
+480 -> 8小时
+*/
+
+function formatDuration(minutes) {
+
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+
+    if (hours === 0) {
+        return `${mins}分钟`;
+    }
+
+    if (mins === 0) {
+        return `${hours}小时`;
+    }
+
+    return `${hours}小时${mins}分钟`;
+}
+
+
+/*
+格式化时间
+
+例如：
+1500分钟 -> 次日 01:00
+*/
+
+function formatClock(minutes) {
+
+    const day = Math.floor(minutes / 1440);
+
+    minutes = minutes % 1440;
+
+    if (minutes < 0) {
+        minutes += 1440;
+    }
+
+    const hour = Math.floor(minutes / 60);
+    const minute = minutes % 60;
+
+    const time =
+        String(hour).padStart(2, "0") +
+        ":" +
+        String(minute).padStart(2, "0");
+
+    if (day === 1) {
+        return "次日 " + time;
+    }
+
+    if (day > 1) {
+        return `${day}天后 ${time}`;
+    }
+
+    return time;
+}
+
+
+/*
+================================================
+添加起夜记录
+================================================
+*/
+
+let wakeCounter = 0;
+
+
+function addWakePeriod() {
+
+    wakeCounter++;
+
+    const container =
+        document.getElementById("wakeList");
+
+    const div = document.createElement("div");
+
+    div.className = "wake-item";
+
+    div.innerHTML = `
+
+        <div class="wake-header">
+
+            <strong>
+                第 ${wakeCounter} 次起夜
+            </strong>
+
+            <button
+                class="danger"
+                onclick="removeWakePeriod(this)"
+            >
+                删除
+            </button>
+
+        </div>
+
+
+        <div class="row">
+
+            <div class="field">
+
+                <label>
+                    醒来时间
+                </label>
+
+                <input
+                    type="time"
+                    class="wakeTime"
+                >
+
+            </div>
+
+
+            <div class="field">
+
+                <label>
+                    再次入睡时间
+                </label>
+
+                <input
+                    type="time"
+                    class="sleepAgainTime"
+                >
+
+            </div>
+
+        </div>
+
+    `;
+
+    container.appendChild(div);
+
+}
+
+
+function removeWakePeriod(button) {
+
+    button
+        .closest(".wake-item")
+        .remove();
+
+}
+
+
+/*
+================================================
+获取所有起夜时间段
+================================================
+*/
+
+function getWakePeriods() {
+
+    const wakeTimes =
+        document.querySelectorAll(".wakeTime");
+
+    const sleepAgainTimes =
+        document.querySelectorAll(".sleepAgainTime");
+
+    let periods = [];
+
+    for (let i = 0; i < wakeTimes.length; i++) {
+
+        const wake =
+            timeToMinutes(wakeTimes[i].value);
+
+        const sleepAgain =
+            timeToMinutes(
+                sleepAgainTimes[i].value
+            );
+
+        /*
+        如果两个时间都没有填写
+        就跳过
+        */
+
+        if (wake === null &&
+            sleepAgain === null) {
+
+            continue;
+
+        }
+
+
+        /*
+        必须两个时间都填写
+        */
+
+        if (wake === null ||
+            sleepAgain === null) {
+
+            throw new Error(
+                `第 ${i + 1} 次起夜时间没有填写完整`
+            );
+
+        }
+
+
+        periods.push({
+
+            wake: wake,
+
+            sleepAgain: sleepAgain
+
+        });
+
+    }
+
+
+    return periods;
+
+}
+
+
+/*
+================================================
+把一天内的时间转换为连续时间轴
+
+例如首次入睡：
+22:00
+
+起夜：
+02:00
+
+会自动认为：
+02:00 是次日
+================================================
+*/
+
+function normalizePeriods(
+    sleepStart,
+    periods
+) {
+
+    let normalized = [];
+
+    let lastTime = sleepStart;
+
+
+    for (let period of periods) {
+
+        let wake =
+            period.wake;
+
+        let sleepAgain =
+            period.sleepAgain;
+
+
+        /*
+        如果醒来时间
+        比前一个时间早
+
+        说明跨过午夜
+        */
+
+        while (wake < lastTime) {
+
+            wake += 1440;
+
+        }
+
+
+        /*
+        再次入睡必须在
+        醒来之后
+        */
+
+        while (sleepAgain < wake) {
+
+            sleepAgain += 1440;
+
+        }
+
+
+        normalized.push({
+
+            wake: wake,
+
+            sleepAgain: sleepAgain
+
+        });
+
+
+        lastTime = sleepAgain;
+
+    }
+
+
+    return normalized;
+
+}
+
+
+/*
+================================================
+计算应该几点起床
+================================================
+*/
+
+function calculateWakeTime() {
+
+    try {
+
+        const sleepStart =
+            timeToMinutes(
+                document
+                    .getElementById("sleepStart")
+                    .value
+            );
+
+
+        if (sleepStart === null) {
+
+            alert("请输入首次入睡时间");
+
+            return;
+
+        }
+
+
+        const targetHours =
+            parseFloat(
+                document
+                    .getElementById("targetSleep")
+                    .value
+            );
+
+
+        if (!targetHours ||
+            targetHours <= 0) {
+
+            alert("请输入正确的目标睡眠时间");
+
+            return;
+
+        }
+
+
+        const targetMinutes =
+            targetHours * 60;
+
+
+        let periods =
+            getWakePeriods();
+
+
+        periods =
+            normalizePeriods(
+                sleepStart,
+                periods
+            );
+
+
+        /*
+        起夜总时长
+        */
+
+        let awakeMinutes = 0;
+
+
+        for (let period of periods) {
+
+            awakeMinutes +=
+
+                period.sleepAgain
+                -
+                period.wake;
+
+        }
+
+
+        /*
+        起床时间
+
+        实际经过时间
+        =
+        目标睡眠时间
+        +
+        起夜时间
+        */
+
+        const wakeTime =
+
+            sleepStart
+            +
+            targetMinutes
+            +
+            awakeMinutes;
+
+
+        document
+            .getElementById("recommendedWake")
+            .textContent =
+
+            formatClock(
+                Math.round(wakeTime)
+            );
+
+
+        document
+            .getElementById("wakeDetail")
+            .innerHTML =
+
+            `
+            目标睡眠：
+            <strong>
+                ${formatDuration(targetMinutes)}
+            </strong>
+
+            <br>
+
+            中间清醒时间：
+            <strong>
+                ${formatDuration(awakeMinutes)}
+            </strong>
+
+            <br>
+
+            总共经过时间：
+            <strong>
+                ${formatDuration(
+                    targetMinutes +
+                    awakeMinutes
+                )}
+            </strong>
+            `;
+
+
+        document
+            .getElementById("wakeResult")
+            .style.display = "block";
+
+
+    }
+
+    catch (error) {
+
+        alert(error.message);
+
+    }
+
+}
+
+
+/*
+================================================
+计算实际睡眠时间
+================================================
+*/
+
+function calculateActualSleep() {
+
+    try {
+
+        const sleepStart =
+            timeToMinutes(
+                document
+                    .getElementById("sleepStart")
+                    .value
+            );
+
+
+        const finalWake =
+            timeToMinutes(
+                document
+                    .getElementById("finalWake")
+                    .value
+            );
+
+
+        if (sleepStart === null) {
+
+            alert("请输入首次入睡时间");
+
+            return;
+
+        }
+
+
+        if (finalWake === null) {
+
+            alert("请输入最终起床时间");
+
+            return;
+
+        }
+
+
+        let periods =
+            getWakePeriods();
+
+
+        periods =
+            normalizePeriods(
+                sleepStart,
+                periods
+            );
+
+
+        /*
+        处理最终起床时间
+
+        如果起床时间
+        比入睡时间早
+
+        默认认为是次日
+        */
+
+        let finalWakeNormalized =
+            finalWake;
+
+
+        while (
+            finalWakeNormalized
+            <
+            sleepStart
+        ) {
+
+            finalWakeNormalized +=
+                1440;
+
+        }
+
+
+        /*
+        如果存在起夜记录
+
+        最终起床时间
+        必须在最后一次入睡之后
+        */
+
+        if (periods.length > 0) {
+
+            const lastSleepAgain =
+
+                periods[
+                    periods.length - 1
+                ]
+                .sleepAgain;
+
+
+            while (
+                finalWakeNormalized
+                <
+                lastSleepAgain
+            ) {
+
+                finalWakeNormalized +=
+                    1440;
+
+            }
+
+        }
+
+
+        /*
+        总经过时间
+        */
+
+        const totalElapsed =
+
+            finalWakeNormalized
+            -
+            sleepStart;
+
+
+        /*
+        起夜清醒时间
+        */
+
+        let awakeMinutes = 0;
+
+
+        for (let period of periods) {
+
+            /*
+            如果起夜发生在
+            最终起床之前
+            才计算
+            */
+
+            if (
+                period.wake
+                <
+                finalWakeNormalized
+            ) {
+
+                let awakeEnd =
+                    Math.min(
+                        period.sleepAgain,
+                        finalWakeNormalized
+                    );
+
+
+                awakeMinutes +=
+
+                    awakeEnd
+                    -
+                    period.wake;
+
+            }
+
+        }
+
+
+        /*
+        实际睡眠
+
+        =
+        总经过时间
+        -
+        清醒时间
+        */
+
+        const actualSleep =
+
+            totalElapsed
+            -
+            awakeMinutes;
+
+
+        document
+            .getElementById("actualSleep")
+            .textContent =
+
+            formatDuration(
+                Math.round(actualSleep)
+            );
+
+
+        document
+            .getElementById("sleepDetail")
+            .innerHTML =
+
+            `
+            从首次入睡到最终起床：
+            <strong>
+                ${formatDuration(totalElapsed)}
+            </strong>
+
+            <br>
+
+            中间清醒：
+            <strong>
+                ${formatDuration(awakeMinutes)}
+            </strong>
+
+            <br>
+
+            实际睡眠：
+            <strong>
+                ${formatDuration(actualSleep)}
+            </strong>
+            `;
+
+
+        document
+            .getElementById("sleepResult")
+            .style.display = "block";
+
+
+    }
+
+    catch (error) {
+
+        alert(error.message);
+
+    }
+
+}
+
+</script>
+
+</body>
+</html>
