@@ -1,530 +1,75 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#2563eb">
-<title>睡眠起床计算器</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#f4f6f8;color:#1f2937;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
-.container{max-width:720px;margin:0 auto;padding:18px 14px 40px}
-.card{background:#fff;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 4px 18px rgba(0,0,0,.07)}
-h1{text-align:center;margin:6px 0 4px;font-size:26px}
-.subtitle{text-align:center;color:#6b7280;margin:0 0 18px;font-size:14px}
-h2{font-size:18px;margin:0 0 16px}
-.row{display:flex;gap:14px;flex-wrap:wrap}
-.field{flex:1;min-width:180px}
-label{display:block;font-size:14px;font-weight:600;margin:0 0 7px}
-input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:11px;font-size:17px;background:#fff;color:#111827}
-button{border:0;border-radius:11px;padding:12px 15px;font-size:15px;cursor:pointer}
-button:active{transform:scale(.98)}
-.primary{background:#2563eb;color:#fff;width:100%;margin-top:12px}
-.secondary{background:#e5e7eb;color:#111827}
-.danger{background:#fee2e2;color:#b91c1c}
-.current-btn{width:100%;margin-top:9px}
-.status{text-align:center;font-size:13px;color:#16a34a}
-.small{font-size:13px;color:#6b7280;line-height:1.6}
-.result{margin-top:16px;padding:18px;border-radius:13px;background:#eff6ff;text-align:center}
-.big-result{font-size:32px;font-weight:750;color:#1d4ed8;margin:7px 0}
-.detail{color:#4b5563;line-height:1.8}
-.wake-item{background:#fafafa;border:1px solid #e5e7eb;border-radius:13px;padding:14px;margin-bottom:12px}
-.wake-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.wake-header strong{font-size:15px}
-.wake-item .danger{padding:7px 10px;font-size:13px}
-.history-info{background:#faf5ff;border-radius:12px;padding:13px;line-height:1.75;font-size:14px}
-.timeline-summary{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;margin-bottom:15px}
-.legend{display:inline-block;width:13px;height:13px;border-radius:4px;margin-right:6px;vertical-align:-2px}
-.sleep-legend{background:#2563eb}.awake-legend{background:#f59e0b}
-.timeline-empty{text-align:center;color:#9ca3af;background:#f9fafb;border-radius:12px;padding:30px 15px}
-.timeline-labels{display:flex;justify-content:space-between;color:#6b7280;font-size:12px;margin-bottom:7px}
-.timeline-bar{width:100%;height:46px;display:flex;overflow:hidden;border-radius:12px;background:#e5e7eb;box-shadow:inset 0 0 0 1px rgba(0,0,0,.04)}
-.timeline-segment{height:100%;min-width:2px;cursor:pointer}
-.timeline-sleep{background:#2563eb}.timeline-awake{background:#f59e0b}
-.timeline-segment:hover{filter:brightness(.92)}
-.timeline-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px}
-.timeline-stats div{background:#f8fafc;padding:12px 7px;border-radius:10px;text-align:center}
-.timeline-stats span{display:block;font-size:12px;color:#6b7280;margin-bottom:5px}
-.timeline-stats strong{font-size:15px}
-.session-list{display:grid;gap:10px}
-.session{border:1px solid #e5e7eb;border-radius:12px;padding:13px;background:#fafafa}
-.session-title{display:flex;justify-content:space-between;gap:10px;font-weight:700;margin-bottom:5px}
-.session-meta{font-size:13px;color:#6b7280;line-height:1.7}
-.empty{text-align:center;color:#9ca3af;padding:10px}
-.top-actions{display:flex;gap:9px}
-.top-actions button{flex:1}
-@media(max-width:500px){
- .container{padding:12px 10px 30px}.card{padding:17px}
- .timeline-stats{grid-template-columns:1fr}
- .top-actions{flex-direction:column}
-}
-.button-row{display:flex;gap:10px;flex-wrap:wrap}.save-btn{background:#198754;color:white;border:0;border-radius:10px;padding:12px 16px;font-weight:700;cursor:pointer}.save-btn:hover{opacity:.9}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>睡眠计算器</title>
+  <style>
+    :root { color-scheme: light; --blue:#2563eb; --ink:#172033; --muted:#64748b; --line:#e2e8f0; --card:#fff; --bg:#f1f5f9; --awake:#f59e0b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    main { max-width:760px; margin:0 auto; padding:28px 16px 48px; }
+    h1 { text-align:center; margin:0; font-size:30px; } .subtitle { text-align:center; color:var(--muted); margin:6px 0 22px; }
+    .card { background:var(--card); border-radius:16px; padding:20px; margin:14px 0; box-shadow:0 3px 16px #0f172a0d; }
+    h2 { margin:0 0 14px; font-size:18px; } .row { display:flex; gap:12px; flex-wrap:wrap; } .field { flex:1; min-width:190px; }
+    label { display:block; font-size:14px; font-weight:650; margin-bottom:6px; } input { width:100%; border:1px solid var(--line); border-radius:10px; padding:11px; font:inherit; background:#fff; }
+    button { border:0; border-radius:10px; padding:11px 14px; margin-top:10px; font:inherit; font-weight:650; cursor:pointer; background:#e2e8f0; color:var(--ink); } button:hover { filter:brightness(.97); } button:active { transform:translateY(1px); }
+    .primary { width:100%; background:var(--blue); color:#fff; } .danger { background:#fee2e2; color:#b91c1c; } .compact { padding:7px 10px; margin:0; font-size:13px; }
+    .status { text-align:center; color:#15803d; font-size:14px; } .small { color:var(--muted); font-size:13px; margin:10px 0 0; }
+    .wake-item, .history-item { border:1px solid var(--line); background:#f8fafc; border-radius:12px; padding:14px; margin:10px 0; }
+    .item-head { display:flex; justify-content:space-between; align-items:center; gap:10px; } .result { background:#eff6ff; border-radius:12px; text-align:center; margin-top:14px; padding:16px; } .hidden { display:none; }
+    .big { color:#1d4ed8; font-size:30px; font-weight:750; margin:5px; } .detail { color:#475569; font-size:14px; }
+    .timeline { height:42px; display:flex; overflow:hidden; border-radius:10px; background:#e2e8f0; } .segment { min-width:2px; height:100%; } .sleep { background:var(--blue); } .awake { background:var(--awake); }
+    .labels { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin:6px 0; } .stats { display:flex; gap:8px; margin-top:12px; } .stat { flex:1; text-align:center; background:#f8fafc; border-radius:9px; padding:8px; font-size:13px; } .stat strong { display:block; }
+    .history-meta { color:var(--muted); font-size:14px; } .empty { color:var(--muted); text-align:center; margin:8px; }
+    @media(max-width:500px) { main { padding:18px 10px 34px; } .card { padding:16px; } h1 { font-size:25px; } .stats { flex-wrap:wrap; } .stat { min-width:30%; } }
+  </style>
 </head>
 <body>
-<div class="container">
-<h1>😴 睡眠起床计算器</h1>
-<p class="subtitle">自动保存完整睡眠会话 · 支持跨午夜 · 起夜时间轴</p>
-
-<div class="card">
-  <div class="status" id="saveStatus">💾 记录自动保存在本设备</div>
-</div>
-
-<div class="card">
-<h2>1️⃣ 今晚睡眠</h2>
-<div class="row">
-  <div class="field">
-    <label for="sleepStart">首次入睡时间</label>
-    <input type="time" id="sleepStart">
-    <button class="secondary current-btn" id="currentBtn" type="button">🕐 使用当前时间</button>
-  </div>
-  <div class="field">
-    <label for="targetSleep">目标睡眠时间（小时）</label>
-    <input type="number" id="targetSleep" value="8" min="0.1" max="24" step="0.1">
-  </div>
-</div>
-<p class="small">首次打开且没有未完成睡眠会话时，会自动填入当前时间。</p>
-</div>
-
-<div class="card">
-<h2>2️⃣ 中间起夜</h2>
-<div id="wakeList"></div>
-<button class="secondary" id="addWakeBtn" type="button">＋ 添加一次起夜</button>
-<p class="small">每次起夜填写「醒来时间」和「再次入睡时间」。可以添加任意多次。</p>
-</div>
-
-<div class="card">
-<h2>3️⃣ 计算建议起床时间</h2>
-<button class="primary" id="calcWakeBtn" type="button">计算起床时间</button>
-<div class="result" id="wakeResult" hidden>
-  <div>按目标睡眠时间，你应该在</div>
-  <div class="big-result" id="recommendedWake">--:--</div>
-  <div class="detail" id="wakeDetail"></div>
-</div>
-</div>
-
-<div class="card">
-<h2>4️⃣ 输入最终起床时间</h2>
-<div class="field">
-<label for="finalWake">最终起床时间</label>
-<input type="time" id="finalWake">
-</div>
-<div class="button-row"><button class="primary" id="calcSleepBtn" type="button">计算实际睡眠时间</button><button class="save-btn" id="saveSessionBtn" type="button">💾 手动保存本次记录</button></div>
-<div class="result" id="sleepResult" hidden>
-  <div>本次实际睡眠</div>
-  <div class="big-result" id="actualSleep">--</div>
-  <div class="detail" id="sleepDetail"></div>
-</div>
-</div>
-
-<div class="card">
-<h2>📊 睡眠时间轴</h2>
-<div class="timeline-summary">
-  <div><span class="legend sleep-legend"></span>睡眠</div>
-  <div><span class="legend awake-legend"></span>清醒 / 起夜</div>
-</div>
-<div id="timelineEmpty" class="timeline-empty">输入最终起床时间后，这里会显示完整睡眠时间轴。</div>
-<div id="timelineContainer" hidden>
-  <div class="timeline-labels"><span id="timelineStart"></span><span id="timelineMiddle"></span><span id="timelineEnd"></span></div>
-  <div class="timeline-bar" id="timelineBar"></div>
-  <div class="timeline-stats">
-    <div><span>🛏️ 实际睡眠</span><strong id="timelineSleep">--</strong></div>
-    <div><span>🚶 清醒时间</span><strong id="timelineAwake">--</strong></div>
-    <div><span>⏱️ 总经过时间</span><strong id="timelineTotal">--</strong></div>
-  </div>
-</div>
-</div>
-
-<div class="card">
-<h2>📚 已完成睡眠记录</h2>
-<div id="sessionList" class="session-list"></div>
-</div>
-
-<div class="card">
-<div class="top-actions">
-<button class="secondary" id="newSessionBtn" type="button">＋ 开始新的睡眠会话</button>
-<button class="danger" id="clearAllBtn" type="button">🗑️ 清除全部历史</button>
-</div>
-<p class="small">数据只保存在浏览器的 localStorage 中，不会上传到服务器。</p>
-</div>
-</div>
-
+<main>
+  <h1>😴 睡眠计算器</h1><div class="subtitle">记录睡眠、起夜与实际睡眠时长</div>
+  <section class="card"><div id="saveStatus" class="status">💾 当前记录会自动保存到此浏览器</div></section>
+  <section class="card">
+    <h2>1️⃣ 睡眠设置</h2><div class="row"><div class="field"><label for="sleepStart">首次入睡时间</label><input type="time" id="sleepStart"></div><div class="field"><label for="targetSleep">目标睡眠时间（小时）</label><input type="number" id="targetSleep" value="8" min="0.1" max="24" step="0.1"></div></div>
+    <button type="button" id="nowButton">🕐 使用当前时间作为入睡时间</button>
+  </section>
+  <section class="card"><h2>2️⃣ 中间起夜记录</h2><div id="wakeList"></div><button type="button" id="addWake">＋ 添加一次起夜</button><p class="small">填写每次醒来和再次入睡时间；可添加多次。</p></section>
+  <section class="card"><h2>3️⃣ 计算建议起床时间</h2><button type="button" class="primary" id="calculateWake">计算起床时间</button><div id="wakeResult" class="result hidden"><div>为了睡满目标时间，你应该在</div><div id="recommendedWake" class="big"></div><div id="wakeDetail" class="detail"></div></div></section>
+  <section class="card"><h2>4️⃣ 计算实际睡眠</h2><label for="finalWake">最终起床时间</label><input type="time" id="finalWake"><button type="button" class="primary" id="calculateActual">计算今晚睡了多久</button><div id="sleepResult" class="result hidden"><div>你的实际睡眠时间</div><div id="actualSleep" class="big"></div><div id="sleepDetail" class="detail"></div></div><button type="button" class="primary" id="saveCompleted">💾 手动保存本次记录</button></section>
+  <section class="card"><h2>📊 睡眠时间轴</h2><div id="timelineEmpty" class="empty">填写入睡时间和最终起床时间后，这里将显示完整时间轴。</div><div id="timelineContent" class="hidden"><div class="labels"><span id="timelineStart"></span><span>睡眠 / 清醒</span><span id="timelineEnd"></span></div><div id="timelineBar" class="timeline" title="蓝色：睡眠；橙色：清醒／起夜"></div><div class="stats"><div class="stat">实际睡眠<strong id="timelineSleep">--</strong></div><div class="stat">清醒时间<strong id="timelineAwake">--</strong></div><div class="stat">总经过时间<strong id="timelineTotal">--</strong></div></div></div></section>
+  <section class="card"><h2>📚 已完成的睡眠记录</h2><div id="historyList"></div></section>
+  <section class="card"><h2>当前记录</h2><button type="button" class="danger" id="clearCurrent">🗑️ 清空当前记录</button><p class="small">清空不会删除已完成的历史记录。</p></section>
+</main>
 <script>
-"use strict";
-
-const ACTIVE_KEY = "sleepCalculator_active_v2";
-const HISTORY_KEY = "sleepCalculator_history_v2";
-
-let wakeCounter = 0;
-
-const $ = id => document.getElementById(id);
-
-function pad(n){ return String(n).padStart(2,"0"); }
-
-function nowTime(){
-  const d = new Date();
-  return pad(d.getHours()) + ":" + pad(d.getMinutes());
-}
-
-function todayKey(){
-  const d = new Date();
-  return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
-}
-
-function timeToMinutes(value){
-  if(typeof value !== "string" || !/^\d{2}:\d{2}$/.test(value)) return null;
-  const [h,m] = value.split(":").map(Number);
-  if(!Number.isInteger(h)||!Number.isInteger(m)||h<0||h>23||m<0||m>59) return null;
-  return h*60+m;
-}
-
-function normalizeForward(start, value){
-  let x = value;
-  while(x < start) x += 1440;
-  return x;
-}
-
-function formatDuration(minutes){
-  if(!Number.isFinite(minutes) || minutes < 0) return "--";
-  minutes = Math.round(minutes);
-  const h = Math.floor(minutes/60);
-  const m = minutes%60;
-  if(h===0) return m+"分钟";
-  if(m===0) return h+"小时";
-  return h+"小时"+m+"分钟";
-}
-
-function clockFromAbsolute(abs){
-  if(!Number.isFinite(abs)) return "--:--";
-  let m = Math.round(abs % 1440);
-  if(m<0) m += 1440;
-  return pad(Math.floor(m/60))+":"+pad(m%60);
-}
-
-function clockLabel(abs){
-  if(!Number.isFinite(abs)) return "--:--";
-  let day = Math.floor(abs/1440);
-  const t = clockFromAbsolute(abs);
-  return day>0 ? "次日 "+t : t;
-}
-
-function getHistory(){
-  try{
-    const x = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
-    return Array.isArray(x) ? x : [];
-  }catch(e){ return []; }
-}
-
-function saveHistory(list){
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
-}
-
-function getActive(){
-  try{
-    const x = JSON.parse(localStorage.getItem(ACTIVE_KEY) || "null");
-    return x && typeof x==="object" ? x : null;
-  }catch(e){ return null; }
-}
-
-function collectRecord(){
-  return {
-    sleepStart: $("sleepStart").value || "",
-    targetSleep: $("targetSleep").value || "8",
-    finalWake: $("finalWake").value || "",
-    wakePeriods: Array.from(document.querySelectorAll(".wake-item")).map(item=>({
-      wake: item.querySelector(".wakeTime").value || "",
-      sleepAgain: item.querySelector(".sleepAgainTime").value || ""
-    })),
-    createdAt: getActive()?.createdAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-}
-
-function saveActive(){
-  const record = collectRecord();
-  if(record.sleepStart || record.finalWake || record.wakePeriods.length){
-    localStorage.setItem(ACTIVE_KEY, JSON.stringify(record));
-    $("saveStatus").textContent = "💾 已自动保存 · "+new Date().toLocaleTimeString("zh-CN",{hour:"2-digit",minute:"2-digit"});
-  }else{
-    localStorage.removeItem(ACTIVE_KEY);
-    $("saveStatus").textContent = "💾 记录自动保存在本设备";
-  }
-  updateTimeline();
-}
-
-function renumberWakeItems(){
-  document.querySelectorAll(".wake-item").forEach((item,i)=>{
-    item.querySelector(".wake-number").textContent = "第 "+(i+1)+" 次起夜";
-  });
-}
-
-function addWakePeriod(wake="", sleepAgain="", doSave=true){
-  wakeCounter++;
-  const div = document.createElement("div");
-  div.className = "wake-item";
-  div.innerHTML = `
-    <div class="wake-header">
-      <strong class="wake-number">第 ${wakeCounter} 次起夜</strong>
-      <button class="danger remove-wake" type="button">删除</button>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label>醒来时间</label>
-        <input type="time" class="wakeTime" value="${escapeAttr(wake)}">
-      </div>
-      <div class="field">
-        <label>再次入睡时间</label>
-        <input type="time" class="sleepAgainTime" value="${escapeAttr(sleepAgain)}">
-      </div>
-    </div>`;
-  $("wakeList").appendChild(div);
-  div.querySelector(".remove-wake").addEventListener("click",()=>{
-    div.remove();
-    renumberWakeItems();
-    saveActive();
-  });
-  div.querySelectorAll("input").forEach(input=>{
-    input.addEventListener("input", saveActive);
-    input.addEventListener("change", saveActive);
-  });
-  if(doSave) saveActive();
-}
-
-function escapeAttr(s){
-  return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
-}
-
-function readPeriods(start){
-  const result=[];
-  const items = document.querySelectorAll(".wake-item");
-  for(let i=0;i<items.length;i++){
-    const w = timeToMinutes(items[i].querySelector(".wakeTime").value);
-    const s = timeToMinutes(items[i].querySelector(".sleepAgainTime").value);
-    if(w===null && s===null) continue;
-    if(w===null || s===null) throw new Error("第 "+(i+1)+" 次起夜的时间没有填写完整。");
-    const wake = normalizeForward(start,w);
-    const sleepAgain = normalizeForward(wake,s);
-    result.push({wake,sleepAgain});
-  }
-  return result;
-}
-
-function buildSegments(){
-  const start = timeToMinutes($("sleepStart").value);
-  const finalRaw = timeToMinutes($("finalWake").value);
-  if(start===null || finalRaw===null) return null;
-
-  const periods = readPeriods(start);
-  let finalWake = normalizeForward(start, finalRaw);
-
-  if(periods.length){
-    const last = periods[periods.length-1].sleepAgain;
-    while(finalWake < last) finalWake += 1440;
-  }
-
-  const total = finalWake-start;
-  if(total<=0 || total>48*60) throw new Error("起床时间与入睡时间的间隔不合理，请检查时间。");
-
-  const segments=[];
-  let current=start;
-
-  for(const p of periods){
-    if(p.wake>=finalWake) break;
-    if(p.wake>current){
-      segments.push({type:"sleep",start:current,end:Math.min(p.wake,finalWake)});
-    }
-    const awakeEnd=Math.min(p.sleepAgain,finalWake);
-    if(awakeEnd>p.wake){
-      segments.push({type:"awake",start:p.wake,end:awakeEnd});
-    }
-    current=Math.max(current,p.sleepAgain);
-  }
-
-  if(current<finalWake){
-    segments.push({type:"sleep",start:current,end:finalWake});
-  }
-
-  let sleep=0, awake=0;
-  for(const s of segments){
-    const d=s.end-s.start;
-    if(s.type==="sleep") sleep+=d; else awake+=d;
-  }
-  return {start,finalWake,total,sleep,awake,segments,periods};
-}
-
-function calculateWakeTime(){
-  try{
-    const start=timeToMinutes($("sleepStart").value);
-    if(start===null) throw new Error("请输入首次入睡时间。");
-    const target=Number($("targetSleep").value);
-    if(!Number.isFinite(target) || target<=0 || target>24) throw new Error("请输入 0.1–24 小时之间的目标睡眠时间。");
-    const periods=readPeriods(start);
-    const awake=periods.reduce((sum,p)=>sum+(p.sleepAgain-p.wake),0);
-    const recommended=start+target*60+awake;
-    $("recommendedWake").textContent=clockLabel(recommended);
-    $("wakeDetail").innerHTML=`目标睡眠：<strong>${formatDuration(target*60)}</strong><br>预计中间清醒：<strong>${formatDuration(awake)}</strong><br>从入睡到起床总经过：<strong>${formatDuration(target*60+awake)}</strong>`;
-    $("wakeResult").hidden=false;
-    saveActive();
-  }catch(e){ alert(e.message); }
-}
-
-function calculateActualSleep(){
-  try{
-    const data=buildSegments();
-    if(!data) throw new Error("请输入首次入睡时间和最终起床时间。");
-    $("actualSleep").textContent=formatDuration(data.sleep);
-    $("sleepDetail").innerHTML=`从入睡到起床：<strong>${formatDuration(data.total)}</strong><br>中间清醒：<strong>${formatDuration(data.awake)}</strong><br>实际睡眠：<strong>${formatDuration(data.sleep)}</strong>`;
-    $("sleepResult").hidden=false;
-    updateTimeline();
-    saveActive();
-  }catch(e){ alert(e.message); }
-}
-
-function updateTimeline(){
-  try{
-    const data=buildSegments();
-    if(!data){ hideTimeline(); return; }
-    const bar=$("timelineBar");
-    bar.innerHTML="";
-    for(const seg of data.segments){
-      const d=seg.end-seg.start;
-      if(d<=0) continue;
-      const el=document.createElement("div");
-      el.className="timeline-segment "+(seg.type==="sleep"?"timeline-sleep":"timeline-awake");
-      el.style.width=(d/data.total*100)+"%";
-      el.title=(seg.type==="sleep"?"睡眠":"清醒")+" · "+clockLabel(seg.start)+" - "+clockLabel(seg.end)+" · "+formatDuration(d);
-      bar.appendChild(el);
-    }
-    $("timelineStart").textContent=clockFromAbsolute(data.start);
-    $("timelineMiddle").textContent=clockFromAbsolute(data.start+data.total/2);
-    $("timelineEnd").textContent=clockLabel(data.finalWake);
-    $("timelineSleep").textContent=formatDuration(data.sleep);
-    $("timelineAwake").textContent=formatDuration(data.awake);
-    $("timelineTotal").textContent=formatDuration(data.total);
-    $("timelineEmpty").hidden=true;
-    $("timelineContainer").hidden=false;
-  }catch(e){ hideTimeline(); }
-}
-
-function hideTimeline(){
-  $("timelineEmpty").hidden=false;
-  $("timelineContainer").hidden=true;
-}
-
-function restoreRecord(record){
-  $("sleepStart").value=record?.sleepStart || "";
-  $("targetSleep").value=record?.targetSleep || "8";
-  $("finalWake").value=record?.finalWake || "";
-  $("wakeList").innerHTML="";
-  wakeCounter=0;
-  const periods=Array.isArray(record?.wakePeriods)?record.wakePeriods:[];
-  periods.forEach(p=>addWakePeriod(p.wake||"",p.sleepAgain||"",false));
-  renumberWakeItems();
-  updateTimeline();
-}
-
-function startNewSession(){
-  localStorage.removeItem(ACTIVE_KEY);
-  $("sleepStart").value=nowTime();
-  $("targetSleep").value="8";
-  $("finalWake").value="";
-  $("wakeList").innerHTML="";
-  wakeCounter=0;
-  $("wakeResult").hidden=true;
-  $("sleepResult").hidden=true;
-  $("saveStatus").textContent="🆕 已开始新的睡眠会话";
-  saveActive();
-}
-
-function finishSession(){
-  try{
-    const data=buildSegments();
-    if(!data) throw new Error("请先填写首次入睡时间和最终起床时间。");
-    if(!$("finalWake").value) throw new Error("请先填写最终起床时间，再保存本次记录。");
-    const record=collectRecord();
-    const history=getHistory();
-    if(record.createdAt && history.some(r=>r.createdAt===record.createdAt && r.finalWake===record.finalWake)){
-      throw new Error("这次睡眠记录已经保存过了。");
-    }
-    history.unshift({...record,duration:data.sleep,awake:data.awake,total:data.total,finishedAt:new Date().toISOString()});
-    saveHistory(history.slice(0,90));
-    localStorage.removeItem(ACTIVE_KEY);
-    renderHistory();
-    $("saveStatus").textContent="✅ 睡眠会话已完成并保存到历史";
-    alert("✅ 本次睡眠记录已保存！");
-  }catch(e){ alert(e.message); }
-}
-function renderHistory(){
-  const list=$("sessionList");
-  const history=getHistory();
-  if(!history.length){
-    list.innerHTML='<div class="empty">还没有已完成的睡眠记录。</div>';
-    return;
-  }
-  list.innerHTML="";
-  history.forEach((r,i)=>{
-    const div=document.createElement("div");
-    div.className="session";
-    const date=r.finishedAt ? new Date(r.finishedAt).toLocaleDateString("zh-CN",{month:"2-digit",day:"2-digit"}) : "--";
-    div.innerHTML=`
-      <div class="session-title"><span>${date} · ${r.sleepStart||"--:--"} → ${r.finalWake||"--:--"}</span><span>${formatDuration(Number(r.duration))}</span></div>
-      <div class="session-meta">起夜 ${Array.isArray(r.wakePeriods)?r.wakePeriods.length:0} 次 · 清醒 ${formatDuration(Number(r.awake))} · 总经过 ${formatDuration(Number(r.total))}</div>`;
-    list.appendChild(div);
-  });
-}
-
-function clearAll(){
-  if(!confirm("确定清除所有已保存的睡眠记录和当前会话吗？")) return;
-  localStorage.removeItem(ACTIVE_KEY);
-  localStorage.removeItem(HISTORY_KEY);
-  startNewSession();
-  renderHistory();
-  $("saveStatus").textContent="🗑️ 已清除全部记录";
-}
-
-function autoFinishIfNeeded(){
-  const active=getActive();
-  if(!active) return;
-  restoreRecord(active);
-  $("saveStatus").textContent="📂 已恢复未完成的睡眠会话";
-}
-
-$("currentBtn").addEventListener("click",()=>{
-  $("sleepStart").value=nowTime();
-  saveActive();
-});
-
-$("addWakeBtn").addEventListener("click",()=>addWakePeriod());
-$("calcWakeBtn").addEventListener("click",calculateWakeTime);
-$("calcSleepBtn").addEventListener("click",calculateActualSleep);
-$("saveSessionBtn").addEventListener("click",finishSession);
-$("newSessionBtn").addEventListener("click",()=>{
-  const active=getActive();
-  if(active && (active.sleepStart || active.finalWake) && !active.finalWake){
-    if(!confirm("当前睡眠会话尚未填写最终起床时间，确定开始新的会话吗？")) return;
-  }
-  startNewSession();
-});
-$("clearAllBtn").addEventListener("click",clearAll);
-
-["sleepStart","targetSleep","finalWake"].forEach(id=>{
-  $(id).addEventListener("input",saveActive);
-  $(id).addEventListener("change",saveActive);
-});
-
-window.addEventListener("beforeunload",saveActive);
-
-document.addEventListener("DOMContentLoaded",()=>{
-  const active=getActive();
-  if(active){
-    autoFinishIfNeeded();
-  }else{
-    $("sleepStart").value=nowTime();
-    saveActive();
-  }
-  renderHistory();
-  updateTimeline();
-});
+(() => {
+  'use strict';
+  const CURRENT_KEY = 'sleepCalculator.current.v3', HISTORY_KEY = 'sleepCalculator.history.v3';
+  const $ = id => document.getElementById(id);
+  const timeToMinutes = value => { if (!/^\d{2}:\d{2}$/.test(value || '')) return null; const [h,m]=value.split(':').map(Number); return h*60+m; };
+  const duration = minutes => { minutes=Math.round(minutes); const h=Math.floor(minutes/60), m=minutes%60; return h ? (m ? `${h}小时${m}分钟` : `${h}小时`) : `${m}分钟`; };
+  const clock = minutes => { const day=Math.floor(minutes/1440); minutes=((minutes%1440)+1440)%1440; const t=`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`; return day===0?t:day===1?`次日 ${t}`:`${day}天后 ${t}`; };
+  // 时间控件不含日期。若最终起床钟点早于入睡钟点，就把这次睡眠归到昨天（入睡日期）。
+  const sleepDate = (startValue, endValue) => { const d=new Date(); const start=timeToMinutes(startValue), end=timeToMinutes(endValue); if(start!==null && end!==null && end<start) d.setDate(d.getDate()-1); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
+  function nowTime() { const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+  function setStatus(text) { $('saveStatus').textContent=text; }
+  function wakeRows() { return [...document.querySelectorAll('.wake-item')]; }
+  function addWake(wake='', again='') { const item=document.createElement('div'); item.className='wake-item'; item.innerHTML=`<div class="item-head"><strong>起夜记录</strong><button type="button" class="danger compact remove-wake">删除</button></div><div class="row"><div class="field"><label>醒来时间</label><input type="time" class="wake-time" value="${wake}"></div><div class="field"><label>再次入睡时间</label><input type="time" class="again-time" value="${again}"></div></div>`; $('wakeList').append(item); item.querySelector('.remove-wake').addEventListener('click',()=>{item.remove(); saveCurrent();}); item.querySelectorAll('input').forEach(input=>input.addEventListener('input',saveCurrent)); }
+  function collectPeriods() { const result=[]; for (const [i,row] of wakeRows().entries()) { const wake=timeToMinutes(row.querySelector('.wake-time').value), again=timeToMinutes(row.querySelector('.again-time').value); if (wake===null && again===null) continue; if (wake===null || again===null) throw new Error(`第 ${i+1} 次起夜的时间没有填写完整`); result.push({wake,again}); } return result; }
+  function normalize(start, periods) { let last=start; return periods.map(p=>{ let wake=p.wake, again=p.again; while(wake<last) wake+=1440; while(again<wake) again+=1440; last=again; return {wake,again}; }); }
+  function readState() { return {sleepStart:$('sleepStart').value, targetSleep:$('targetSleep').value, finalWake:$('finalWake').value, wakePeriods:wakeRows().map(row=>({wake:row.querySelector('.wake-time').value, again:row.querySelector('.again-time').value}))}; }
+  function saveCurrent() { localStorage.setItem(CURRENT_KEY,JSON.stringify(readState())); setStatus('💾 当前记录已自动保存'); }
+  function restoreCurrent() { try { const data=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null'); if (!data) return false; $('sleepStart').value=data.sleepStart||''; $('targetSleep').value=data.targetSleep||'8'; $('finalWake').value=data.finalWake||''; (data.wakePeriods||[]).forEach(p=>addWake(p.wake,p.again)); setStatus('📂 已恢复当前记录'); return true; } catch { localStorage.removeItem(CURRENT_KEY); return false; } }
+  function actualData() { const start=timeToMinutes($('sleepStart').value), endRaw=timeToMinutes($('finalWake').value); if(start===null || endRaw===null) throw new Error('请先填写首次入睡时间和最终起床时间'); let end=endRaw; while(end<start) end+=1440; const periods=normalize(start,collectPeriods()).filter(p=>p.wake<end); let awake=0, cursor=start; for(const p of periods){ if(p.wake<cursor) throw new Error('起夜时间顺序有重叠，请按实际发生顺序填写'); if(p.again>end) throw new Error('再次入睡时间不能晚于最终起床时间'); awake+=p.again-p.wake; cursor=p.again; } return {start,end,periods,awake,sleep:end-start-awake}; }
+  function renderTimeline(data) { const bar=$('timelineBar'); bar.replaceChildren(); const all=[{kind:'sleep',from:data.start,to:data.periods[0]?.wake??data.end}]; data.periods.forEach((p,i)=>{all.push({kind:'awake',from:p.wake,to:p.again}); all.push({kind:'sleep',from:p.again,to:data.periods[i+1]?.wake??data.end});}); const total=data.end-data.start; all.filter(s=>s.to>s.from).forEach(s=>{const el=document.createElement('div'); el.className=`segment ${s.kind}`; el.style.flex=`${s.to-s.from} 0 0`; el.title=`${s.kind==='sleep'?'睡眠':'清醒'}：${clock(s.from)} → ${clock(s.to)}（${duration(s.to-s.from)}）`; bar.append(el);}); $('timelineStart').textContent=clock(data.start); $('timelineEnd').textContent=clock(data.end); $('timelineSleep').textContent=duration(data.sleep); $('timelineAwake').textContent=duration(data.awake); $('timelineTotal').textContent=duration(total); $('timelineEmpty').classList.add('hidden'); $('timelineContent').classList.remove('hidden'); }
+  function calculateActual() { try { const data=actualData(); if(data.sleep<0) throw new Error('起夜时间不能超过总经过时间'); $('actualSleep').textContent=duration(data.sleep); $('sleepDetail').textContent=`总经过 ${duration(data.end-data.start)}，其中清醒／起夜 ${duration(data.awake)}。`; $('sleepResult').classList.remove('hidden'); renderTimeline(data); saveCurrent(); return data; } catch(error) { alert(error.message); return null; } }
+  function calculateWake() { try { const start=timeToMinutes($('sleepStart').value), target=Number($('targetSleep').value); if(start===null) throw new Error('请填写首次入睡时间'); if(!Number.isFinite(target)||target<=0) throw new Error('请输入正确的目标睡眠时间'); const periods=normalize(start,collectPeriods()); const awake=periods.reduce((sum,p)=>sum+p.again-p.wake,0), wake=start+target*60+awake; $('recommendedWake').textContent=clock(Math.round(wake)); $('wakeDetail').textContent=`目标睡眠 ${duration(target*60)}；已记录清醒时间 ${duration(awake)}。`; $('wakeResult').classList.remove('hidden'); saveCurrent(); } catch(error) { alert(error.message); } }
+  function history() { try { const list=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); return Array.isArray(list)?list:[]; } catch { return []; } }
+  function renderHistory() { const list=$('historyList'), entries=history(); list.replaceChildren(); if(!entries.length){list.innerHTML='<p class="empty">还没有已完成的睡眠记录。</p>';return;} entries.forEach(entry=>{const item=document.createElement('div'); item.className='history-item'; item.innerHTML=`<div class="item-head"><strong>📅 ${entry.date} · ${entry.sleepStart} → ${entry.finalWake}</strong><button type="button" class="danger compact">删除</button></div><div class="history-meta">实际睡眠 ${entry.sleepDuration} · 清醒／起夜 ${entry.awakeDuration} · ${entry.wakeCount} 次起夜</div>`; item.querySelector('button').addEventListener('click',()=>{if(confirm('确定删除这条已完成的睡眠记录吗？')){localStorage.setItem(HISTORY_KEY,JSON.stringify(history().filter(x=>x.id!==entry.id)));renderHistory();}}); list.append(item); }); }
+  function saveCompleted() { const data=calculateActual(); if(!data) return; const startDate=sleepDate($('sleepStart').value,$('finalWake').value); const entry={id:`${Date.now()}-${Math.random()}`,date:startDate,sleepStart:$('sleepStart').value,finalWake:$('finalWake').value,sleepDuration:duration(data.sleep),awakeDuration:duration(data.awake),wakeCount:data.periods.length}; const entries=history(); const duplicate=entries.some(x=>x.date===entry.date&&x.sleepStart===entry.sleepStart&&x.finalWake===entry.finalWake); if(duplicate){alert('这条睡眠记录已经保存过了。');return;} entries.unshift(entry); localStorage.setItem(HISTORY_KEY,JSON.stringify(entries.slice(0,90))); renderHistory(); setStatus('✅ 本次睡眠已保存到历史记录'); }
+  function clearCurrent() { if(!confirm('确定清空当前记录吗？已完成的历史记录不会删除。'))return; localStorage.removeItem(CURRENT_KEY); $('sleepStart').value=''; $('targetSleep').value='8'; $('finalWake').value=''; $('wakeList').replaceChildren(); $('wakeResult').classList.add('hidden'); $('sleepResult').classList.add('hidden'); $('timelineContent').classList.add('hidden'); $('timelineEmpty').classList.remove('hidden'); setStatus('🗑️ 当前记录已清空'); }
+  $('nowButton').addEventListener('click',()=>{$('sleepStart').value=nowTime();saveCurrent();}); $('addWake').addEventListener('click',()=>{addWake();saveCurrent();}); $('calculateWake').addEventListener('click',calculateWake); $('calculateActual').addEventListener('click',calculateActual); $('saveCompleted').addEventListener('click',saveCompleted); $('clearCurrent').addEventListener('click',clearCurrent); ['sleepStart','targetSleep','finalWake'].forEach(id=>$(id).addEventListener('input',saveCurrent));
+  if(!restoreCurrent()) $('sleepStart').value=nowTime(); renderHistory();
+})();
 </script>
 </body>
 </html>
