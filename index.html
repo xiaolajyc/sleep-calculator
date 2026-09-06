@@ -1,665 +1,75 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>家庭冷冻库存管理 V11</title>
-<style>
-:root{--ink:#14241f;--muted:#63736d;--bg:#f4f8f6;--card:#fff;--accent:#147a58;--warn:#b56c00;--danger:#b92b36;--line:#dce7e1}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,"Microsoft YaHei",sans-serif;color:var(--ink)}header{padding:22px max(20px,calc((100% - 1120px)/2));background:#113d31;color:white;display:flex;align-items:center;justify-content:space-between;gap:16px}h1{font-size:20px;margin:0}.wrap{max-width:1120px;margin:auto;padding:20px;display:grid;grid-template-columns:200px 1fr;gap:20px}.nav,.card,dialog{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 14px #16392a0a}.nav{padding:9px;height:max-content}.nav button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:11px;border-radius:8px;color:var(--ink);font:inherit;cursor:pointer}.nav button.active,.nav button:hover{background:#e5f4ed;color:#07583c}.content{min-width:0}.view{display:none}.view.active{display:block}.grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:12px}.category-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}.category-card{padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff}.category-name{font-weight:700;font-size:16px}.category-weight{font-size:24px;font-weight:700;margin-top:6px}.category-detail{margin-top:5px;color:var(--muted);font-size:12px}.card{padding:16px}.metric{font-size:28px;font-weight:700;color:var(--accent)}.muted{color:var(--muted);font-size:13px}h2{margin:0 0 14px;font-size:20px}h3{margin:0 0 8px;font-size:16px}.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0}.spread{justify-content:space-between}button,.button{appearance:none;border:0;border-radius:8px;background:var(--accent);color:#fff;padding:9px 13px;font:inherit;cursor:pointer;text-decoration:none}.secondary{background:#e8f1ed;color:#174333}.danger{background:var(--danger)}button:hover{filter:brightness(.95)}input,select,textarea{width:100%;padding:9px;border:1px solid #bfd1c8;border-radius:8px;font:inherit;background:#fff}label{font-weight:600;font-size:13px;display:block;margin-top:10px}.list{display:grid;gap:8px}.item{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff}.badge{display:inline-block;padding:3px 7px;border-radius:99px;background:#fff0d1;color:#875000;font-size:12px}.low{color:var(--danger);font-weight:600}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.table th{font-size:12px;color:var(--muted)}dialog{width:min(520px,calc(100% - 24px));padding:0}dialog::backdrop{background:#10282088}.dialog-head{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.dialog-body{padding:4px 18px 18px}.dialog-head button{background:none;color:var(--muted);font-size:22px;padding:0}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.empty{padding:22px;text-align:center;color:var(--muted)}.notice{padding:10px 14px;background:#e5f4ed;border-radius:8px;color:#07583c;margin:10px 0}.hide{display:none}@media(max-width:720px){header{padding:16px 18px}.wrap{grid-template-columns:1fr;padding:12px}.nav{display:flex;overflow:auto;padding:6px}.nav button{white-space:nowrap;width:auto}.grid{grid-template-columns:repeat(2,1fr)}.table{font-size:13px}.table th:nth-child(4),.table td:nth-child(4){display:none}}
-</style></head><body>
-<header><h1>🧊 家庭冷冻库存管理</h1><div class="row"><button class="secondary" id="exportBtn">备份 JSON</button><label class="button secondary" for="restoreFile">恢复备份</label><input id="restoreFile" type="file" accept="application/json" class="hide"></div></header>
-<main class="wrap"><nav class="nav" id="nav"><button data-view="dashboard" class="active">总览</button><button data-view="inventory">库存</button><button data-view="products">商品 / 规格</button><button data-view="freezers">冰柜 / 区域</button><button data-view="history">操作流水</button><button data-view="inspection">长期检查</button><button data-view="settings">设置</button></nav>
-<section class="content">
-<div id="dashboard" class="view active"><div class="row spread"><h2>今日库存概况</h2><div><button data-open="receive">＋ 入库</button> <button data-open="use" class="secondary">－ 取用</button> <button data-open="transfer" class="secondary">⇄ 转移</button> <button data-open="adjust" class="secondary">▣ 盘点</button></div></div><div id="metrics" class="grid"></div><div class="card" style="margin-top:16px"><h3>优先使用 / 开封库存</h3><div id="priority" class="list"></div></div><div class="card" style="margin-top:16px"><h3>低库存提醒</h3><div id="lowStock" class="list"></div></div></div>
-<div id="inventory" class="view"><div class="row spread"><h2>我的库存</h2><input id="search" placeholder="搜索商品、规格、批次、冰柜或区域" style="max-width:360px"></div><div id="inventoryList"></div></div>
-<div id="products" class="view"><div class="row spread"><h2>商品 / 规格</h2><button data-open="product">＋ 新增商品</button></div><div id="productList" class="list"></div></div>
-<div id="freezers" class="view"><div class="row spread"><h2>冰柜 / 区域</h2><button data-open="freezer">＋ 新增冰柜</button></div><div id="freezerList" class="list"></div></div>
-<div id="history" class="view"><h2>不可变操作流水</h2><div id="historyList"></div></div>
-<div id="inspection" class="view"><div class="row spread"><h2>长期冷冻检查</h2><span class="muted">按 批次 跟踪检查周期</span></div><div id="inspectionList"></div></div>
-<div id="settings" class="view"><div class="grid"><div class="card"><h3>长期冷冻检查</h3><p>食品入库满 <b>1 年</b> 后进入长期冷冻检查提醒。</p><p class="muted">检查内容：包装、冻烧/氧化、异味转移、结霜及处理建议。</p></div><div class="card"><h3>批次 编号</h3><label>Prefix<input id="batchPrefix" value="BAT"></label><button id="saveSettings" style="margin-top:10px">保存设置</button></div></div></div>
-</section></main>
-<dialog id="modal"><div class="dialog-head"><h2 id="modalTitle"></h2><button type="button" id="closeModal" class="js-close-modal" aria-label="关闭">×</button></div><form id="modalForm" class="dialog-body"></form></dialog>
-<dialog id="deleteConfirm">
-  <div class="dialog-head">
-    <h2>确认删除商品</h2>
-    <button type="button" id="deleteConfirmClose" class="js-close-delete" aria-label="关闭">×</button>
-  </div>
-  <div class="dialog-body">
-    <div id="deleteConfirmText"></div>
-    <div class="actions">
-      <button type="button" class="secondary" id="deleteCancel">取消</button>
-      <button type="button" class="danger" id="deleteReally">确认删除</button>
-    </div>
-  </div>
-</dialog><div id="toast" class="notice hide" role="status"></div>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>睡眠计算器</title>
+  <style>
+    :root { color-scheme: light; --blue:#2563eb; --ink:#172033; --muted:#64748b; --line:#e2e8f0; --card:#fff; --bg:#f1f5f9; --awake:#f59e0b; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
+    main { max-width:760px; margin:0 auto; padding:28px 16px 48px; }
+    h1 { text-align:center; margin:0; font-size:30px; } .subtitle { text-align:center; color:var(--muted); margin:6px 0 22px; }
+    .card { background:var(--card); border-radius:16px; padding:20px; margin:14px 0; box-shadow:0 3px 16px #0f172a0d; }
+    h2 { margin:0 0 14px; font-size:18px; } .row { display:flex; gap:12px; flex-wrap:wrap; } .field { flex:1; min-width:190px; }
+    label { display:block; font-size:14px; font-weight:650; margin-bottom:6px; } input { width:100%; border:1px solid var(--line); border-radius:10px; padding:11px; font:inherit; background:#fff; }
+    button { border:0; border-radius:10px; padding:11px 14px; margin-top:10px; font:inherit; font-weight:650; cursor:pointer; background:#e2e8f0; color:var(--ink); } button:hover { filter:brightness(.97); } button:active { transform:translateY(1px); }
+    .primary { width:100%; background:var(--blue); color:#fff; } .danger { background:#fee2e2; color:#b91c1c; } .compact { padding:7px 10px; margin:0; font-size:13px; }
+    .status { text-align:center; color:#15803d; font-size:14px; } .small { color:var(--muted); font-size:13px; margin:10px 0 0; }
+    .wake-item, .history-item { border:1px solid var(--line); background:#f8fafc; border-radius:12px; padding:14px; margin:10px 0; }
+    .item-head { display:flex; justify-content:space-between; align-items:center; gap:10px; } .result { background:#eff6ff; border-radius:12px; text-align:center; margin-top:14px; padding:16px; } .hidden { display:none; }
+    .big { color:#1d4ed8; font-size:30px; font-weight:750; margin:5px; } .detail { color:#475569; font-size:14px; }
+    .timeline { height:42px; display:flex; overflow:hidden; border-radius:10px; background:#e2e8f0; } .segment { min-width:2px; height:100%; } .sleep { background:var(--blue); } .awake { background:var(--awake); }
+    .labels { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin:6px 0; } .stats { display:flex; gap:8px; margin-top:12px; } .stat { flex:1; text-align:center; background:#f8fafc; border-radius:9px; padding:8px; font-size:13px; } .stat strong { display:block; }
+    .history-meta { color:var(--muted); font-size:14px; } .empty { color:var(--muted); text-align:center; margin:8px; }
+    @media(max-width:500px) { main { padding:18px 10px 34px; } .card { padding:16px; } h1 { font-size:25px; } .stats { flex-wrap:wrap; } .stat { min-width:30%; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>😴 睡眠计算器</h1><div class="subtitle">记录睡眠、起夜与实际睡眠时长</div>
+  <section class="card"><div id="saveStatus" class="status">💾 当前记录会自动保存到此浏览器</div></section>
+  <section class="card">
+    <h2>1️⃣ 睡眠设置</h2><div class="row"><div class="field"><label for="sleepStart">首次入睡时间</label><input type="time" id="sleepStart"></div><div class="field"><label for="targetSleep">目标睡眠时间（小时）</label><input type="number" id="targetSleep" value="8" min="0.1" max="24" step="0.1"></div></div>
+    <button type="button" id="nowButton">🕐 使用当前时间作为入睡时间</button>
+  </section>
+  <section class="card"><h2>2️⃣ 中间起夜记录</h2><div id="wakeList"></div><button type="button" id="addWake">＋ 添加一次起夜</button><p class="small">填写每次醒来和再次入睡时间；可添加多次。</p></section>
+  <section class="card"><h2>3️⃣ 计算建议起床时间</h2><button type="button" class="primary" id="calculateWake">计算起床时间</button><div id="wakeResult" class="result hidden"><div>为了睡满目标时间，你应该在</div><div id="recommendedWake" class="big"></div><div id="wakeDetail" class="detail"></div></div></section>
+  <section class="card"><h2>4️⃣ 计算实际睡眠</h2><label for="finalWake">最终起床时间</label><input type="time" id="finalWake"><button type="button" class="primary" id="calculateActual">计算今晚睡了多久</button><div id="sleepResult" class="result hidden"><div>你的实际睡眠时间</div><div id="actualSleep" class="big"></div><div id="sleepDetail" class="detail"></div></div><button type="button" class="primary" id="saveCompleted">💾 手动保存本次记录</button></section>
+  <section class="card"><h2>📊 睡眠时间轴</h2><div id="timelineEmpty" class="empty">填写入睡时间和最终起床时间后，这里将显示完整时间轴。</div><div id="timelineContent" class="hidden"><div class="labels"><span id="timelineStart"></span><span>睡眠 / 清醒</span><span id="timelineEnd"></span></div><div id="timelineBar" class="timeline" title="蓝色：睡眠；橙色：清醒／起夜"></div><div class="stats"><div class="stat">实际睡眠<strong id="timelineSleep">--</strong></div><div class="stat">清醒时间<strong id="timelineAwake">--</strong></div><div class="stat">总经过时间<strong id="timelineTotal">--</strong></div></div></div></section>
+  <section class="card"><h2>📚 已完成的睡眠记录</h2><div id="historyList"></div></section>
+  <section class="card"><h2>当前记录</h2><button type="button" class="danger" id="clearCurrent">🗑️ 清空当前记录</button><p class="small">清空不会删除已完成的历史记录。</p></section>
+</main>
 <script>
 (() => {
-"use strict";
-
-const KEY = "freezer-dashboard-v4";
-const $ = s => document.querySelector(s);
-const $$ = s => [...document.querySelectorAll(s)];
-const uid = p => p + "_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
-const today = () => new Date().toISOString().slice(0,10);
-const now = () => new Date().toISOString();
-const esc = s => String(s ?? "").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
-
-function seed(){
-  const f1={id:uid("fz"),code:"FZ01",name:"主冰柜",active:true,sort:1,notes:"厨房主冰柜"};
-  const f2={id:uid("fz"),code:"FZ02",name:"备用冰柜",active:true,sort:2,notes:""};
-  const z=(fid,code,name,sort,parentId=null)=>({id:uid("zn"),freezerId:fid,code,name,sort,parentId,active:true});
-  const zs=[z(f1.id,"Z01","抽屉 1",1),z(f1.id,"Z02","抽屉 2",2),z(f1.id,"Z03","抽屉 3",3),z(f2.id,"Z01","上层",1)];
-  const p=(code,name,category,tags=[])=>({id:uid("p"),code,name,category,tags,active:true,notes:""});
-  const ps=[p("P001","猪肉末","肉类",["常用"]),p("P002","鸡胸肉","肉类",["高蛋白"]),p("P003","饺子","主食",["早餐"])];
-  const v=(productId,code,name,w,min)=>({id:uid("v"),productId,code,name,unit:"g",packWeight:w,minStock:min,active:true,tags:[],notes:""});
-  const vs=[v(ps[0].id,"V001","400g/包",400,1200),v(ps[1].id,"V002","500g/袋",500,1500),v(ps[2].id,"V003","猪肉白菜 500g",500,1000)];
-  const batch=(code,vid,received)=>({id:uid("bat"),code,规格Id:vid,received,createdAt:now(),notes:""});
-  const bs=[
-    batch("BAT-20260801-001",vs[0].id,"2026-08-01"),
-    batch("BAT-20260815-001",vs[0].id,"2026-08-15"),
-    batch("BAT-20260720-001",vs[1].id,"2026-07-20"),
-    batch("BAT-20260810-001",vs[2].id,"2026-08-10")
-  ];
-  return {
-    version:3,products:ps,规格s:vs,freezers:[f1,f2],zones:zs,batches:bs,
-    stock:[
-      {id:uid("st"),batchId:bs[0].id,zoneId:zs[1].id,sealedPacks:2,openedGrams:160,openedAt:"2026-09-01",updatedAt:now()},
-      {id:uid("st"),batchId:bs[1].id,zoneId:zs[0].id,sealedPacks:2,openedGrams:0,openedAt:null,updatedAt:now()},
-      {id:uid("st"),batchId:bs[2].id,zoneId:zs[0].id,sealedPacks:2,openedGrams:250,openedAt:"2026-08-30",updatedAt:now()},
-      {id:uid("st"),batchId:bs[3].id,zoneId:zs[2].id,sealedPacks:3,openedGrams:0,openedAt:null,updatedAt:now()}
-    ],
-    inspections:[],transactions:[],
-    settings:{inspectionIntervalDays:365,batchPrefix:"BAT"}
-  };
-}
-let state;
-try { state=JSON.parse(localStorage.getItem(KEY)||"null"); } catch(e){ state=null; }
-if(!state || state.version!==3) state=seed();
-
-function save(){localStorage.setItem(KEY,JSON.stringify(state))}
-function product(id){return state.products.find(x=>x.id===id)}
-function 规格(id){return state.规格s.find(x=>x.id===id)}
-function batch(id){return state.batches.find(x=>x.id===id)}
-function freezer(id){return state.freezers.find(x=>x.id===id)}
-function zone(id){return state.zones.find(x=>x.id===id)}
-function 规格Label(v){return v ? `${product(v.productId)?.name||"未知"} · ${v.name}` : "—"}
-function zonePath(id){
-  let z=zone(id), a=[], n=0;
-  while(z && n++<30){a.unshift(z.name); z=zone(z.parentId)}
-  return a.join(" / ");
-}
-function loc(id){const z=zone(id);return z ? `${freezer(z.freezerId)?.name||"未知"} / ${zonePath(id)}` : "—"}
-function stockRows(){return state.stock.filter(s=>s.sealedPacks>0||s.openedGrams>0)}
-function batchRows(bid){return stockRows().filter(s=>s.batchId===bid)}
-function grams(vid){
-  const v=规格(vid);
-  if(!v)return 0;
-  return state.stock.reduce((total,s)=>{
-    const b=batch(s.batchId);
-    if(!b || b.规格Id!==vid)return total;
-    const packs=Number(s.sealedPacks)||0;
-    const opened=Number(s.openedGrams)||0;
-    return total + packs*(Number(v.packWeight)||0) + opened;
-  },0);
-}
-function log(type,label,data={}){
-  state.transactions.unshift({
-    id:uid("tx"),time:now(),type,label,
-    productId:data.productId||null,规格Id:data.规格Id||null,batchId:data.batchId||null,
-    sourceZoneId:data.sourceZoneId||null,targetZoneId:data.targetZoneId||null,
-    quantity:data.quantity??null,unit:data.unit||null,before:data.before??null,after:data.after??null,
-    reason:data.reason||"",note:data.note||"",operator:"本机用户",clientOperationId:uid("op")
-  });
-}
-function toast(t){const x=$("#toast");x.textContent=t;x.classList.remove("hide");clearTimeout(window.__toast);window.__toast=setTimeout(()=>x.classList.add("hide"),2400)}
-function next批次Code(){
-  const prefix=state.settings.batchPrefix||"BAT", d=today().replaceAll("-","");
-  let n=1,code;
-  do {code=`${prefix}-${d}-${String(n++).padStart(3,"0")}`} while(state.batches.some(b=>b.code===code));
-  return code;
-}
-function productOptions(){
-  return state.products.filter(p=>p.active!==false).flatMap(p=>state.规格s.filter(v=>v.productId===p.id&&v.active!==false)
-    .map(v=>`<option value="${v.id}">${esc(p.name)} · ${esc(v.name)} [${esc(v.code)}]</option>`)).join("");
-}
-function zoneOptions(){
-  return state.zones.filter(z=>z.active!==false&&freezer(z.freezerId)?.active!==false)
-    .sort((a,b)=>freezer(a.freezerId).sort-freezer(b.freezerId).sort||a.sort-b.sort)
-    .map(z=>`<option value="${z.id}">${esc(loc(z.id))}</option>`).join("");
-}
-function batchOptions(){
-  return stockRows().sort((a,b)=>(b.openedGrams>0)-(a.openedGrams>0)||batch(a.batchId).received.localeCompare(batch(b.batchId).received))
-    .map(s=>{const b=batch(s.batchId),v=规格(b.规格Id);return `<option value="${b.id}">${esc(规格Label(v))} · ${esc(loc(s.zoneId))} · ${s.sealedPacks}包 + ${s.openedGrams}g</option>`}).join("");
-}
-
-function render(){
-  save(); renderDashboard(); renderInventory(); renderProducts(); renderFreezers(); renderHistory(); renderInspection(); renderSettings();
-}
-function renderDashboard(){
-  const rows=stockRows(), opened=rows.filter(s=>s.openedGrams>0);
-  const low=state.规格s.filter(v=>v.active!==false&&grams(v.id)<v.minStock);
-  const due=inspectionDue();
-  const totalGrams=rows.reduce((n,s)=>{
-    const b=batch(s.batchId),v=b?规格(b.规格Id):null;
-    return n+s.sealedPacks*(Number(v?.packWeight)||0)+s.openedGrams;
-  },0);
-
-  $("#metrics").innerHTML=[
-    ["当前库存",totalGrams.toLocaleString()+" g"],
-    ["规格",state.规格s.filter(v=>v.active!==false).length],
-    ["开封库存",opened.length],["低库存",low.length]
-  ].map(x=>`<div class="card"><div class="metric">${esc(x[1])}</div><div class="muted">${esc(x[0])}</div></div>`).join("");
-
-  // 按商品分类汇总当前库存重量，例如：猪类、鸡类、主食等。
-  const categoryMap={};
-  rows.forEach(s=>{
-    const b=batch(s.batchId),v=b?规格(b.规格Id):null,p=v?product(v.productId):null;
-    if(!p)return;
-    const category=(p.category||"未分类").trim()||"未分类";
-    const gramsNow=s.sealedPacks*(Number(v?.packWeight)||0)+Number(s.openedGrams)||0;
-    if(!categoryMap[category]) categoryMap[category]={grams:0,items:0};
-    categoryMap[category].grams+=gramsNow;
-    categoryMap[category].items+=1;
-  });
-
-  let categoryBox=$("#categorySummary");
-  if(!categoryBox){
-    categoryBox=document.createElement("div");
-    categoryBox.id="categorySummary";
-    categoryBox.className="card";
-    $("#metrics").after(categoryBox);
-  }
-  const cats=Object.entries(categoryMap).sort((a,b)=>b[1].grams-a[1].grams);
-  categoryBox.innerHTML=`
-    <h3>按商品分类统计当前库存</h3>
-    ${cats.length?`<div class="category-grid">${cats.map(([name,x])=>`
-      <div class="category-card">
-        <div class="category-name">${esc(name)}</div>
-        <div class="category-weight">${x.grams.toLocaleString()} g</div>
-        <div class="category-detail">${x.items} 个库存位置 / 批次</div>
-      </div>`).join("")}</div>`:`<div class="empty">暂无库存</div>`}
-  `;
-  $("#priority").innerHTML=opened.length?opened.sort((a,b)=>String(a.openedAt).localeCompare(String(b.openedAt))).slice(0,6).map(s=>cardStock(s)).join(""):"<div class='empty'>暂无开封库存</div>";
-  $("#lowStock").innerHTML=low.length?low.map(v=>`<div class="item"><b class="low">⚠ ${esc(规格Label(v))}</b><br><span class="muted">当前 ${grams(v.id)}g · 最低 ${v.minStock}g</span></div>`).join(""):"<div class='empty'>没有低库存 规格</div>";
-  $("#inspectionNotice")?.remove();
-  const notice=document.createElement("div");notice.id="inspectionNotice";notice.className="notice";notice.innerHTML=due.length?`🔎 长期冷冻检查提醒：<b>${due.length}</b> 个 批次 到期。`:"";
-  if(due.length) $("#metrics").before(notice);
-}
-function cardStock(s){
-  const b=batch(s.batchId),v=规格(b.规格Id);
-  return `<div class="item"><b>${s.openedGrams?"⭐ ":""}${esc(规格Label(v))}</b><br><span class="muted">${esc(loc(s.zoneId))} · 入库 ${esc(b.received)}</span><br>${s.sealedPacks} 包${s.openedGrams?` + <span class="badge">开封 ${s.openedGrams}g</span>`:""} <button class="secondary" style="float:right" data-action="use" data-id="${b.id}">取用</button></div>`;
-}
-function renderInventory(){
-  const q=($("#search")?.value||"").trim().toLowerCase();
-  const rows=stockRows().filter(s=>{const b=batch(s.batchId),v=规格(b.规格Id),p=product(v.productId);return !q||`${p.name} ${v.name} ${v.code} ${b.code} ${b.received} ${loc(s.zoneId)}`.toLowerCase().includes(q)})
-  .sort((a,b)=>(b.openedGrams>0)-(a.openedGrams>0)||batch(a.batchId).received.localeCompare(batch(b.batchId).received));
-  $("#inventoryList").innerHTML=rows.length?`<table class="table"><thead><tr><th>商品 / 规格</th><th>批次</th><th>位置</th><th>库存</th><th>入库</th><th>标签</th><th>操作</th></tr></thead><tbody>${rows.map(s=>{
-    const b=batch(s.batchId),v=规格(b.规格Id),p=product(v.productId);
-    return `<tr><td><b>${esc(p.name)}</b><br><span class="muted">${esc(v.name)}</span></td><td>${esc(b.code)}</td><td>${esc(loc(s.zoneId))}</td><td>${s.sealedPacks} 包${s.openedGrams?` + ${s.openedGrams}g`:""}</td><td>${esc(b.received)}</td><td>${(p.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join(" ")}</td><td><button class="secondary" data-action="use" data-id="${b.id}">取用</button> <button class="secondary" data-action="transfer" data-id="${b.id}">转移</button> <button class="secondary" data-action="detail" data-id="${b.id}">详情</button></td></tr>`
-  }).join("")}</tbody></table>`:"<div class='card empty'>没有匹配库存</div>";
-}
-function renderProducts(){
-  const box=$("#productList");
-  box.innerHTML=state.products.map(p=>{
-    const vs=state.规格s.filter(v=>v.productId===p.id);
-    const totalGrams=vs.reduce((sum,v)=>sum+grams(v.id),0);
-    return `<div class="item">
-      <div class="row spread" style="margin:0">
-        <div><b>${esc(p.name)}</b>${p.category?`<div class="muted">${esc(p.category)}</div>`:""}</div>
-        <div>
-          <button type="button" class="secondary" data-action="editProduct" data-id="${p.id}">编辑商品</button>
-          <button type="button" class="danger js-delete-product" data-product-id="${p.id}">删除商品</button>
-        </div>
-      </div>
-      <div class="row">
-        ${vs.map(v=>`<span class="badge">${esc(v.name)} · ${grams(v.id)}g
-          <button type="button" style="padding:2px 5px;background:transparent;color:inherit" data-action="edit规格" data-id="${v.id}" title="编辑规格">✎</button>
-          <button type="button" style="padding:2px 5px;background:transparent;color:var(--danger)" data-action="delete规格" data-id="${v.id}" title="删除规格">×</button>
-        </span>`).join("")}
-        ${vs.length===0?`<button type="button" class="secondary" data-action="add规格" data-id="${p.id}">＋ 添加规格</button>`:`<span class="muted">已有规格，可直接编辑</span>`}
-      </div>
-      ${vs.length?`<div class="muted">当前库存：${totalGrams.toLocaleString()} g</div>`:`<div class="muted">还没有规格</div>`}
-    </div>`;
-  }).join("")||"<div class='empty'>还没有商品</div>";
-
-  // Explicitly bind product-delete buttons after every render.
-  box.querySelectorAll(".js-delete-product").forEach(btn=>{
-    btn.onclick=e=>{
-      e.preventDefault();
-      e.stopPropagation();
-      showDeleteProductConfirm(btn.dataset.productId);
-    };
-  });
-}
-function renderFreezers(){
-  $("#freezerList").innerHTML=state.freezers.sort((a,b)=>a.sort-b.sort).map(f=>{
-    const zs=state.zones.filter(z=>z.freezerId===f.id).sort((a,b)=>a.sort-b.sort);
-    const total=zs.reduce((n,z)=>n+stockRows().filter(s=>s.zoneId===z.id).reduce((x,s)=>{const v=规格(batch(s.batchId).规格Id);return x+s.sealedPacks*v.packWeight+s.openedGrams},0),0);
-    return `<div class="item"><div class="row spread"><div><b>🧊 ${esc(f.name)}</b> ${f.active===false?"<span class='badge'>停用</span>":""}<div class="muted">${esc(f.notes||"")} · ${total}g</div></div><div><button class="secondary" data-action="editFreezer" data-id="${f.id}">编辑</button> <button class="secondary" data-action="upFreezer" data-id="${f.id}">↑</button> <button class="secondary" data-action="downFreezer" data-id="${f.id}">↓</button></div></div>
-    <div class="list">${zs.map(z=>`<div class="item"><div class="row spread"><span><b>${esc(z.name)}</b> ${z.active===false?"<span class='badge'>停用</span>":""}</span><span>${stockRows().filter(s=>s.zoneId===z.id).reduce((n,s)=>{const v=规格(batch(s.batchId).规格Id);return n+s.sealedPacks*v.packWeight+s.openedGrams},0)}g</span></div><div class="actions"><button class="secondary" data-action="editZone" data-id="${z.id}">编辑</button><button class="secondary" data-action="upZone" data-id="${z.id}">↑</button><button class="secondary" data-action="downZone" data-id="${z.id}">↓</button><button class="danger" data-action="deleteZone" data-id="${z.id}">删除</button></div></div>`).join("")}</div><button class="secondary" data-action="addZone" data-id="${f.id}">＋ 添加 Zone</button></div>`
-  }).join("")||"<div class='empty'>还没有冰柜</div>";
-}
-function renderHistory(){
-  $("#historyList").innerHTML=state.transactions.length?`<table class="table"><thead><tr><th>时间</th><th>操作</th><th>规格</th><th>批次</th><th>数量</th><th>前→后</th><th>位置</th><th>原因/备注</th></tr></thead><tbody>${state.transactions.map(t=>`<tr><td>${esc(new Date(t.time).toLocaleString("zh-CN",{hour12:false}))}</td><td><b>${esc(t.type)}</b><br>${esc(t.label)}</td><td>${esc(规格Label(规格(t.规格Id)))}</td><td>${esc(batch(t.batchId)?.code||"—")}</td><td>${t.quantity==null?"—":esc(t.quantity)+" "+esc(t.unit||"")}</td><td>${esc(t.before??"—")} → ${esc(t.after??"—")}</td><td>${esc(loc(t.sourceZoneId))}${t.targetZoneId?" → "+esc(loc(t.targetZoneId)):""}</td><td>${esc(t.reason)} ${esc(t.note)}</td></tr>`).join("")}</tbody></table>`:"<div class='card empty'>尚无操作记录</div>";
-}
-function inspectionDue(){
-  const cutoffDays = 365;
-  const nowMs = Date.now();
-  return state.batches.filter(b=>{
-    const inMs = new Date(b.received + "T00:00:00").getTime();
-    const ageDays = (nowMs - inMs) / 86400000;
-    if(ageDays < cutoffDays) return false;
-    const last = state.inspections.filter(i=>i.batchId===b.id)
-      .sort((a,c)=>String(c.date).localeCompare(String(a.date)))[0];
-    return !last || ((nowMs - new Date(last.date+"T00:00:00").getTime()) / 86400000 >= cutoffDays);
-  });
-}
-function renderInspection(){
-  const due=inspectionDue();
-  $("#inspectionList") && ($("#inspectionList").innerHTML=state.batches.filter(b=>batchRows(b.id).length).map(b=>{
-    const last=state.inspections.filter(i=>i.batchId===b.id).sort((a,c)=>String(c.date).localeCompare(String(a.date)))[0],s=batchRows(b.id)[0];
-    return `<div class="item"><b>${esc(规格Label(规格(b.规格Id)))}</b><br><span class="muted">${esc(loc(s.zoneId))} · 上次检查 ${last?.date||"从未检查"}</span> ${due.some(x=>x.id===b.id)?"<span class='low'> · 到期</span>":""}<button class="secondary" style="float:right" data-action="check" data-id="${b.id}">检查</button></div>`
-  }).join("")||"<div class='empty'>暂无在库 批次</div>");
-}
-function renderSettings(){
-  if($("#inspectionDays")) $("#inspectionDays").value=state.settings.inspectionIntervalDays||365;
-  if($("#batchPrefix")) $("#batchPrefix").value=state.settings.batchPrefix||"BAT";
-}
-
-function showView(v){
-  $$(".view").forEach(x=>x.classList.remove("active"));
-  $("#"+v).classList.add("active");
-  $$("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));
-}
-
-function modal(title,html,kind,id=null){
-  $("#modalTitle").textContent=title;$("#modalForm").innerHTML=html;$("#modalForm").dataset.kind=kind;$("#modalForm").dataset.id=id||"";$("#modal").showModal();
-}
-function closeModal(){$("#modal").close()}
-
-function open(kind,id=null,productId=null){
-  if(kind==="product"||kind==="editProduct"){
-    const p=id?product(id):null;
-    modal(p?"编辑商品":"新增商品",`
-      <label>商品名称<input name="name" value="${esc(p?.name||"")}" placeholder="例如：鸡胸肉" required></label>
-      <label>分类（可选）<input name="category" value="${esc(p?.category||"")}" placeholder="例如：肉类"></label>
-      <label>标签（可选）<input name="tags" value="${esc((p?.tags||[]).join(","))}" placeholder="例如：常用,晚餐"></label>
-      <label>备注（可选）<textarea name="notes" rows="3">${esc(p?.notes||"")}</textarea>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存</button></div>
-    `,kind,id);return;
-  }
-  if(kind==="规格"||kind==="edit规格"){
-    const v=id?规格(id):null;
-    const selectedProductId=v?.productId||productId||"";
-    modal(v?"编辑规格":"新增规格",`
-      <label>所属商品<select name="productId" required>${state.products.map(p=>`<option value="${p.id}" ${p.id===selectedProductId?"selected":""}>${esc(p.name)}</option>`).join("")}</select></label>
-      <label>规格名称<input name="name" value="${esc(v?.name||"")}" placeholder="例如：500g/袋" required></label>
-      <label>每包标准重量（g）<input name="weight" type="number" min="0.01" step="0.01" value="${v?.packWeight||""}" required></label>
-      <label>最低库存（g）<input name="min" type="number" min="0" step="1" value="${v?.minStock||0}"></label>
-      <label>标签（可选）<input name="tags" value="${esc((v?.tags||[]).join(","))}"></label>
-      <label>备注（可选）<textarea name="notes" rows="3">${esc(v?.notes||"")}</textarea>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存</button></div>
-    `,kind,id);return;
-  }
-  if(kind==="freezer"||kind==="editFreezer"){
-    const f=id?freezer(id):null;
-    modal(f?"编辑冰柜":"新增冰柜",`
-      <label>冰柜名称<input name="name" value="${esc(f?.name||"")}" required></label>
-      <label>备注（可选）<textarea name="notes">${esc(f?.notes||"")}</textarea></label>
-      <label>状态<select name="active"><option value="true" ${f?.active!==false?"selected":""}>启用</option><option value="false" ${f?.active===false?"selected":""}>停用</option></select></label>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存</button></div>
-    `,kind,id);return;
-  }
-  if(kind==="zone"||kind==="editZone"){
-    const z=zone(id);
-    modal("编辑区域",`
-      <label>区域名称<input name="name" value="${esc(z?.name||"")}" required></label>
-      <label>父级区域<select name="parent"><option value="">无（顶层）</option>${state.zones.filter(x=>x.freezerId===z.freezerId&&x.id!==z.id).map(x=>`<option value="${x.id}" ${x.id===z.parentId?"selected":""}>${esc(x.name)}</option>`).join("")}</select></label>
-      <label>状态<select name="active"><option value="true" ${z?.active!==false?"selected":""}>启用</option><option value="false" ${z?.active===false?"selected":""}>停用</option></select></label>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存</button></div>
-    `,"editZone",id);return;
-  }
-  if(kind==="receive"){
-    modal("入库",`
-      <label>规格<select name="规格" required>${productOptions()}</select></label>
-      <label>完整包装数量<input name="packs" type="number" min="1" value="1" required></label>
-      <label>目标区域<select name="zone" required>${zoneOptions()}</select></label>
-      <label>批次编号（可留空）<input name="batch" placeholder="留空由系统自动生成"></label>
-      <div class="muted">再次录入同一批次编号时，系统会继续增加该批次库存。</div>
-      <label>入库日期<input name="received" type="date" value="${today()}" required></label>
-      <label>备注（可选）<input name="note"></label>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>确认入库</button></div>
-    `,"receive");return;
-  }
-  if(kind==="use"){
-    modal("取用 · 开封优先 + FIFO",`
-      <label>批次<select name="batch" required>${batchOptions()}</select></label>
-      <label>取用方式<select name="mode"><option value="grams">按重量取用</option><option value="packs">取用完整包装</option><option value="all">取用该批次全部</option></select></label>
-      <label>数量<input name="amount" type="number" min="0.01" step="0.01" value="100" required></label>
-      <label>原因/备注（可选）<input name="note" placeholder="晚餐使用"></label>
-      <div class="notice">系统推荐顺序：开封库存 → 最早入库批次（FIFO）。</div>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>确认取用</button></div>
-    `,"use",id);return;
-  }
-  if(kind==="transfer"){
-    modal("转移库存",`
-      <label>批次<select name="batch" required>${batchOptions()}</select></label>
-      <label>完整包数量<input name="packs" type="number" min="0" value="0"></label>
-      <label>开封重量（g）<input name="grams" type="number" min="0" value="0"></label>
-      <label>目标区域<select name="zone" required>${zoneOptions()}</select></label>
-      <label>原因/备注（可选）<input name="note"></label>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>确认转移</button></div>
-    `,"transfer",id);return;
-  }
-  if(kind==="adjust"){
-    modal("库存盘点 / 调整",`
-      <label>批次<select name="batch" required>${batchOptions()}</select></label>
-      <label>盘点后的完整包数<input name="packs" type="number" min="0" required></label>
-      <label>盘点后的开封克数<input name="grams" type="number" min="0" required value="0"></label>
-      <label>原因/备注（可选）<input name="note"></label>
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存盘点</button></div>
-    `,"adjust",id);return;
-  }
-  if(kind==="check"){
-    const b=batch(id),s=batchRows(id)[0];
-    modal("长期冷冻检查",`
-      <p class="muted">${esc(规格Label(规格(b.规格Id)))} · 入库 ${esc(b.received)}</p>
-      <label>包装完整性<select name="package"><option>完整</option><option>有破损</option></select></label>
-      <label>冻伤 / 氧化 / 异味<select name="condition"><option>未发现明显问题</option><option>发现问题</option></select></label>
-      <label>备注<textarea name="note" rows="3"></textarea></label>
-      <input type="hidden" name="batchId" value="${esc(id)}">
-      <div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存检查</button></div>
-    `,"check",id);return;
-  }
-}
-function submit(e){
-  e.preventDefault();
-  const fd=new FormData(e.target),k=e.target.dataset.kind,id0=e.target.dataset.id;
-  const val=n=>String(fd.get(n)||"").trim();
-  try{
-    if(k==="product"||k==="editProduct"){
-      const p=k==="editProduct"?product(id0):null;
-      const name=val("name");
-      if(!name)throw Error("商品名称不能为空");
-      if(p){
-        p.name=name;p.category=val("category");p.tags=val("tags").split(/[，,]/).map(x=>x.trim()).filter(Boolean);p.notes=val("notes");
-        log("MASTER","修改商品",{productId:p.id,note:p.name});
-        toast("商品已修改");
-      }else{
-        const p={id:uid("p"),code:`P${String(state.products.length+1).padStart(3,"0")}`,name,category:val("category"),tags:val("tags").split(/[，,]/).map(x=>x.trim()).filter(Boolean),active:true,notes:val("notes")};
-        state.products.push(p);log("MASTER","新增商品",{productId:p.id,note:p.name});toast("商品已新增");
-      }
-    } else if(k==="规格"||k==="edit规格"){
-      const v=k==="edit规格"?规格(id0):null;
-      const productId=val("productId"),name=val("name"),weight=+val("weight"),min=+val("min");
-      if(!productId||!name||!Number.isFinite(weight)||weight<=0)throw Error("请完整填写规格信息");
-      const duplicate=state.规格s.find(x=>x.productId===productId && x.name.trim()===name.trim() && x.id!==id0);
-      if(duplicate)throw Error("这个商品已经有相同规格，不需要重复添加。");
-      if(v){
-        v.productId=productId;v.name=name;v.packWeight=weight;v.minStock=Number.isFinite(min)?min:0;v.tags=val("tags").split(/[，,]/).map(x=>x.trim()).filter(Boolean);v.notes=val("notes");
-        log("MASTER","修改规格",{规格Id:v.id,note:`${name}`});toast("规格已修改");
-      }else{
-        const v={id:uid("v"),productId,code:`V${String(state.规格s.length+1).padStart(3,"0")}`,name,unit:"g",packWeight:weight,minStock:Number.isFinite(min)?min:0,active:true,tags:val("tags").split(/[，,]/).map(x=>x.trim()).filter(Boolean),notes:val("notes")};
-        state.规格s.push(v);log("MASTER","新增规格",{规格Id:v.id,note:name});toast("规格已新增");
-      }
-    } else if(k==="freezer"||k==="editFreezer"){
-      const f=k==="editFreezer"?freezer(id0):null;
-      if(f){f.code=val("code")||f.code;f.name=val("name");f.notes=val("notes");f.active=val("active")==="true";log("MASTER","修改冰柜",{note:f.name})}
-      else{const f={id:uid("fz"),code:val("code")||`FZ${String(state.freezers.length+1).padStart(2,"0")}`,name:val("name"),notes:val("notes"),active:true,sort:state.freezers.length+1};state.freezers.push(f);state.zones.push({id:uid("zn"),freezerId:f.id,code:"Z01",name:"默认区域",parentId:null,active:true,sort:1});log("MASTER","新增冰柜",{note:f.name})}
-    } else if(k==="editZone"){
-      const z=zone(id0);z.code=val("code")||z.code;z.name=val("name");z.parentId=val("parent")||null;z.active=val("active")==="true";
-      if(z.parentId===z.id)throw Error("Zone 不能以自己作为父级");
-      log("MASTER","修改 Zone",{sourceZoneId:z.id,note:z.name});
-    } else if(k==="newZone"){
-      const f=val("freezerId"),z={id:uid("zn"),freezerId:f,code:val("code")||`Z${String(state.zones.filter(x=>x.freezerId===f).length+1).padStart(2,"0")}`,name:val("name"),parentId:val("parent")||null,active:true,sort:state.zones.filter(x=>x.freezerId===f).length+1};
-      state.zones.push(z);log("MASTER","新增 Zone",{sourceZoneId:z.id,note:z.name});
-    } else if(k==="receive"){
-      const vid=val("规格"),zid=val("zone"),packs=+val("packs"),code=val("batch")||next批次Code(),z=zone(zid);
-      if(!z)throw Error("Zone 无效");
-      let b=state.batches.find(x=>x.code===code);
-      if(b&&b.规格Id!==vid)throw Error("批次编号 已被其他 规格 使用");
-      if(!b){b={id:uid("bat"),code,规格Id:vid,received:val("received"),createdAt:now(),notes:val("note")};state.batches.push(b)}
-      let s=state.stock.find(x=>x.batchId===b.id&&x.zoneId===zid);
-      if(!s){s={id:uid("st"),batchId:b.id,zoneId:zid,sealedPacks:0,openedGrams:0,openedAt:null,updatedAt:now()};state.stock.push(s)}
-      const before=s.sealedPacks;s.sealedPacks+=packs;s.updatedAt=now();log("RECEIVE","入库",{规格Id:vid,batchId:b.id,targetZoneId:zid,quantity:packs,unit:"pack",before,after:s.sealedPacks,note:`批次 ${b.code}`});
-    } else if(k==="use"){
-      const b=batch(val("batch")),v=规格(b.规格Id),rows=batchRows(b.id).sort((a,b)=>b.openedGrams-a.openedGrams||batch(a.batchId).received.localeCompare(batch(b.batchId).received));
-      let amount=+val("amount");if(val("mode")==="all")amount=rows.reduce((n,s)=>n+s.sealedPacks*v.packWeight+s.openedGrams,0);
-      let remain=amount;
-      for(const s of rows){
-        if(remain<=0)break;
-        const before=s.sealedPacks*v.packWeight+s.openedGrams;
-        if(val("mode")==="packs"){
-          const take=Math.min(remain,s.sealedPacks);s.sealedPacks-=take;remain-=take;log("ISSUE","取用完整包装",{productId:v.productId,规格Id:v.id,batchId:b.id,sourceZoneId:s.zoneId,quantity:take,unit:"pack",before,after:s.sealedPacks*v.packWeight+s.openedGrams,note:val("note")});
-        } else {
-          const take=Math.min(remain,before);let x=take;
-          if(s.openedGrams>=x)s.openedGrams-=x;
-          else{s.openedGrams=0;x-=before-s.openedGrams;const packs=Math.floor(x/v.packWeight);s.sealedPacks-=packs;x-=packs*v.packWeight;if(x>0){if(s.sealedPacks<=0)throw Error("库存不足");s.sealedPacks--;s.openedGrams=v.packWeight-x;s.openedAt=s.openedAt||now()}}
-          remain-=take;log("ISSUE","取用重量",{productId:v.productId,规格Id:v.id,batchId:b.id,sourceZoneId:s.zoneId,quantity:take,unit:"g",before,after:s.sealedPacks*v.packWeight+s.openedGrams,note:val("note")});
-        }
-        s.updatedAt=now();
-      }
-      if(remain>0)throw Error("库存不足，操作未完成");
-    } else if(k==="transfer"){
-      const b=batch(val("batch")),v=规格(b.规格Id),packs=+val("packs"),g=+val("grams"),target=val("zone");
-      if(!packs&&!g)throw Error("请输入转移数量");
-      const src=batchRows(b.id).find(s=>s.sealedPacks>=packs&&s.openedGrams>=g);
-      if(!src)throw Error("同一 批次 的来源位置库存不足");
-      const before=src.sealedPacks*v.packWeight+src.openedGrams;src.sealedPacks-=packs;src.openedGrams-=g;
-      let dst=state.stock.find(s=>s.batchId===b.id&&s.zoneId===target);if(!dst){dst={id:uid("st"),batchId:b.id,zoneId:target,sealedPacks:0,openedGrams:0,openedAt:null,updatedAt:now()};state.stock.push(dst)}
-      dst.sealedPacks+=packs;dst.openedGrams+=g;log("TRANSFER","库存转移",{productId:v.productId,规格Id:v.id,batchId:b.id,sourceZoneId:src.zoneId,targetZoneId:target,quantity:packs||g,unit: packs?"pack":"g",before,after:dst.sealedPacks*v.packWeight+dst.openedGrams,note:val("note")});
-    } else if(k==="adjust"){
-      const s=state.stock.find(x=>x.id===val("stock")),v=规格(batch(s.batchId).规格Id),before=s.sealedPacks*v.packWeight+s.openedGrams;
-      s.sealedPacks=+val("packs");s.openedGrams=+val("grams");const after=s.sealedPacks*v.packWeight+s.openedGrams;
-      log("ADJUSTMENT","库存盘点",{productId:v.productId,规格Id:v.id,batchId:s.batchId,sourceZoneId:s.zoneId,quantity:after-before,unit:"g",before,after,reason:val("reason")});
-    } else if(k==="check"){
-      const b=batch(id0),v=规格(b.规格Id);
-      state.inspections.unshift({id:uid("in"),date:today(),batchId:b.id,package:val("package"),burn:val("burn"),odor:val("odor"),frost:val("frost"),action:val("action"),note:val("note")});
-      log("INSPECTION","长期冷冻检查",{规格Id:v.id,batchId:b.id,reason:val("action"),note:`包装:${val("package")}；冻烧:${val("burn")}；异味:${val("odor")}；${val("note")}`});
-    }
-    closeModal();render();toast("操作完成");
-  }catch(err){alert(err.message)}
-}
-
-function reorder(list,id,dir){
-  const i=list.findIndex(x=>x.id===id),j=i+dir;if(i<0||j<0||j>=list.length)return;
-  const a=list[i],b=list[j];[a.sort,b.sort]=[b.sort,a.sort];render();
-}
-function deleteZone(id){
-  if(stockRows().some(s=>s.zoneId===id))return alert("该 Zone 仍有库存，禁止删除。请先转移库存。");
-  if(state.zones.some(z=>z.parentId===id))return alert("该 Zone 有子 Zone，禁止删除。");
-  state.zones=state.zones.filter(z=>z.id!==id);log("MASTER","删除 Zone",{note:id});render();toast("Zone 已删除");
-}
-
-
-function showDeleteProductConfirm(id0){
-  const p=product(id0);
-  if(!p){
-    toast("找不到这个商品");
-    return;
-  }
-  const vs=state.规格s.filter(v=>v.productId===id0);
-  const specIds=new Set(vs.map(v=>v.id));
-  const batchIds=new Set(state.batches.filter(b=>specIds.has(b.规格Id)).map(b=>b.id));
-  const stockGrams=state.stock.reduce((sum,s)=>{
-    if(!batchIds.has(s.batchId))return sum;
-    const b=batch(s.batchId),v=b?规格(b.规格Id):null;
-    return sum+(Number(s.sealedPacks)||0)*(Number(v?.packWeight)||0)+(Number(s.openedGrams)||0);
-  },0);
-  const hasStock=stockGrams>0;
-
-  $("#deleteConfirmText").innerHTML=
-    `<p>确定要删除商品 <b>“${esc(p.name)}”</b> 吗？</p>
-     <p class="muted">将同时删除 ${vs.length} 个规格、${batchIds.size} 个批次。</p>
-     ${hasStock?`<p class="low"><b>⚠ 当前还有 ${stockGrams.toLocaleString()} g 库存。</b><br>确认删除后，这些库存记录也会一起永久删除。</p>`:`<p class="notice">当前没有库存，可以安全删除。</p>`}`;
-
-  const dlg=$("#deleteConfirm");
-  dlg.dataset.productId=id0;
-  if(typeof dlg.showModal==="function"){
-    dlg.showModal();
-  }else{
-    dlg.setAttribute("open","");
-  }
-}
-
-function deleteProduct(id0){
-  const p=product(id0);
-  if(!p){
-    toast("找不到这个商品");
-    return;
-  }
-
-  const vs=state.规格s.filter(v=>v.productId===id0);
-  const specIds=new Set(vs.map(v=>v.id));
-  const batchIds=new Set(state.batches.filter(b=>specIds.has(b.规格Id)).map(b=>b.id));
-
-  // Remove all data owned by this product.
-  state.stock=state.stock.filter(s=>!batchIds.has(s.batchId));
-  state.inspections=Array.isArray(state.inspections)
-    ? state.inspections.filter(i=>!batchIds.has(i.batchId))
-    : [];
-  state.batches=state.batches.filter(b=>!batchIds.has(b.id));
-  state.规格s=state.规格s.filter(v=>v.productId!==id0);
-  state.products=state.products.filter(p0=>p0.id!==id0);
-
-  log("MASTER","删除商品",{productId:id0,note:p.name});
-  save();
-  render();
-  toast(`商品“${p.name}”已删除`);
-}
-
-function closeDeleteConfirm(){
-  safeCloseDialog("#deleteConfirm");
-}
-function delete规格(id0){
-  const v=规格(id0);if(!v)return;
-  const g=Number(grams(id0))||0;
-  if(g>0)return alert(`“${v.name}”还有 ${g}g 库存，不能删除。请先清空库存。`);
-  if(confirm(`确定删除规格“${v.name}”吗？`)){
-    state.规格s=state.规格s.filter(x=>x.id!==id0);
-    toast("规格已删除");render();
-  }
-}
-window.addEventListener("error",e=>{
-  console.error("应用错误",e.error||e.message);
-});
-
-$("#deleteCancel")?.addEventListener("click",closeDeleteConfirm);
-$("#deleteConfirmClose")?.addEventListener("click",closeDeleteConfirm);
-$("#deleteReally")?.addEventListener("click",()=>{
-  const dlg=$("#deleteConfirm");
-  const id0=dlg.dataset.productId;
-  closeDeleteConfirm();
-  deleteProduct(id0);
-});
-$("#deleteConfirm")?.addEventListener("click",e=>{
-  if(e.target===e.currentTarget)closeDeleteConfirm();
-});
-
-
-// 弹窗关闭：全部采用独立事件，不依赖 data-action。
-function safeCloseDialog(id){
-  const d=$(id);
-  if(!d)return;
-  try{
-    if(d.open)d.close();
-    else d.removeAttribute("open");
-  }catch(e){
-    d.removeAttribute("open");
-  }
-}
-
-$("#closeModal")?.addEventListener("click",e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  safeCloseDialog("#modal");
-});
-
-$("#modalForm")?.addEventListener("click",e=>{
-  const b=e.target.closest(".js-cancel-modal");
-  if(!b)return;
-  e.preventDefault();
-  e.stopPropagation();
-  safeCloseDialog("#modal");
-});
-
-$("#deleteCancel")?.addEventListener("click",e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  safeCloseDialog("#deleteConfirm");
-});
-
-$("#deleteConfirmClose")?.addEventListener("click",e=>{
-  e.preventDefault();
-  e.stopPropagation();
-  safeCloseDialog("#deleteConfirm");
-});
-
-// 点击两个弹窗的遮罩区域即可关闭。
-$("#modal")?.addEventListener("click",e=>{
-  if(e.target===e.currentTarget)safeCloseDialog("#modal");
-});
-$("#deleteConfirm")?.addEventListener("click",e=>{
-  if(e.target===e.currentTarget)safeCloseDialog("#deleteConfirm");
-});
-
-// ESC 统一关闭当前弹窗。
-document.addEventListener("keydown",e=>{
-  if(e.key!=="Escape")return;
-  if($("#deleteConfirm")?.open)safeCloseDialog("#deleteConfirm");
-  else if($("#modal")?.open)safeCloseDialog("#modal");
-});
-
-document.addEventListener("click",e=>{
-  const b=e.target.closest("button");
-  if(!b)return;
-  if(b.classList.contains("js-close-modal") ||
-     b.classList.contains("js-cancel-modal") ||
-     b.classList.contains("js-close-delete") ||
-     b.id==="deleteCancel") return;
-
-  if(b.dataset.view){showView(b.dataset.view);return;}
-  if(b.dataset.open){open(b.dataset.open);return;}
-
-  const a=b.dataset.action, id=b.dataset.id;
-  if(!a)return;
-
-  if(a==="use"){open("use",id);return;}
-  if(a==="transfer"){open("transfer",id);return;}
-  if(a==="detail"){
-    const s=batchRows(id)[0],bt=batch(id),v=规格(bt.规格Id);
-    modal("批次 详情",`<div class="item"><h3>${esc(规格Label(v))}</h3><p><b>批次：</b>${esc(bt.code)}</p><p><b>入库：</b>${esc(bt.received)}</p><p><b>位置：</b>${esc(loc(s.zoneId))}</p><p><b>库存：</b>${s.sealedPacks}包 + ${s.openedGrams}g</p></div><div class="actions"><button type="button" class="secondary" id="cancel">关闭</button></div>`,"detail");
-    return;
-  }
-  if(a==="check"){open("check",id);return;}
-  if(a==="editProduct"){open("editProduct",id);return;}
-  if(a==="deleteProduct"){showDeleteProductConfirm(id);return;}
-  if(a==="add规格"){open("规格",null,id);return;}
-  if(a==="edit规格"){open("edit规格",id);return;}
-  if(a==="delete规格"){delete规格(id);return;}
-  if(a==="editFreezer"){open("editFreezer",id);return;}
-  if(a==="editZone"){open("editZone",id);return;}
-  if(a==="addZone"){
-    modal("新增 Zone",`<input type="hidden" name="freezerId" value="${esc(id)}"><label>区域名称<input name="name" required placeholder="例如：抽屉 4"></label><label>父级<select name="parent"><option value="">无（顶层）</option>${state.zones.filter(z=>z.freezerId===id).map(z=>`<option value="${z.id}">${esc(z.name)}</option>`).join("")}</select></label><div class="actions"><button type="button" class="secondary js-cancel-modal">取消</button><button>保存</button></div>`,"newZone");
-    return;
-  }
-  if(a==="deleteZone"){deleteZone(id);return;}
-  if(a==="upFreezer"){reorder(state.freezers,id,-1);return;}
-  if(a==="downFreezer"){reorder(state.freezers,id,1);return;}
-  if(a==="upZone"){const z=zone(id);reorder(state.zones.filter(x=>x.freezerId===z.freezerId),id,-1);return;}
-  if(a==="downZone"){const z=zone(id);reorder(state.zones.filter(x=>x.freezerId===z.freezerId),id,1);return;}
-});
-$("#modalForm").addEventListener("submit",submit);
-$("#search").addEventListener("input",renderInventory);
-$("#exportBtn").addEventListener("click",()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);a.download=`freezer-inventory-${today()}.json`;a.click();URL.revokeObjectURL(a.href);toast("备份已导出");
-});
-$("#restoreFile").addEventListener("change",e=>{
-  const file=e.target.files[0];if(!file)return;
-  const r=new FileReader();r.onload=()=>{try{const x=JSON.parse(r.result);if(!x.products||!x.规格s||!x.freezers||!x.zones||!x.batches||!x.stock)throw Error();if(confirm("恢复会覆盖当前本机数据，确定？")){state=x;state.version=3;state.settings??={inspectionIntervalDays:365,batchPrefix:"BAT"};state.transactions??=[];state.inspections??=[];render();toast("恢复成功")}}catch(err){alert("无效的库存 JSON")}};r.readAsText(file);e.target.value="";
-});
-$("#saveSettings")?.addEventListener("click",()=>{
-  state.settings.inspectionIntervalDays=365;
-  state.settings.batchPrefix=$("#batchPrefix").value.trim()||"BAT";
-  save();render();toast("设置已保存");
-});
-render();
+  'use strict';
+  const CURRENT_KEY = 'sleepCalculator.current.v3', HISTORY_KEY = 'sleepCalculator.history.v3';
+  const $ = id => document.getElementById(id);
+  const timeToMinutes = value => { if (!/^\d{2}:\d{2}$/.test(value || '')) return null; const [h,m]=value.split(':').map(Number); return h*60+m; };
+  const duration = minutes => { minutes=Math.round(minutes); const h=Math.floor(minutes/60), m=minutes%60; return h ? (m ? `${h}小时${m}分钟` : `${h}小时`) : `${m}分钟`; };
+  const clock = minutes => { const day=Math.floor(minutes/1440); minutes=((minutes%1440)+1440)%1440; const t=`${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`; return day===0?t:day===1?`次日 ${t}`:`${day}天后 ${t}`; };
+  // 时间控件不含日期。若最终起床钟点早于入睡钟点，就把这次睡眠归到昨天（入睡日期）。
+  const sleepDate = (startValue, endValue) => { const d=new Date(); const start=timeToMinutes(startValue), end=timeToMinutes(endValue); if(start!==null && end!==null && end<start) d.setDate(d.getDate()-1); return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')}`; };
+  function nowTime() { const d=new Date(); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+  function setStatus(text) { $('saveStatus').textContent=text; }
+  function wakeRows() { return [...document.querySelectorAll('.wake-item')]; }
+  function addWake(wake='', again='') { const item=document.createElement('div'); item.className='wake-item'; item.innerHTML=`<div class="item-head"><strong>起夜记录</strong><button type="button" class="danger compact remove-wake">删除</button></div><div class="row"><div class="field"><label>醒来时间</label><input type="time" class="wake-time" value="${wake}"></div><div class="field"><label>再次入睡时间</label><input type="time" class="again-time" value="${again}"></div></div>`; $('wakeList').append(item); item.querySelector('.remove-wake').addEventListener('click',()=>{item.remove(); saveCurrent();}); item.querySelectorAll('input').forEach(input=>input.addEventListener('input',saveCurrent)); }
+  function collectPeriods() { const result=[]; for (const [i,row] of wakeRows().entries()) { const wake=timeToMinutes(row.querySelector('.wake-time').value), again=timeToMinutes(row.querySelector('.again-time').value); if (wake===null && again===null) continue; if (wake===null || again===null) throw new Error(`第 ${i+1} 次起夜的时间没有填写完整`); result.push({wake,again}); } return result; }
+  function normalize(start, periods) { let last=start; return periods.map(p=>{ let wake=p.wake, again=p.again; while(wake<last) wake+=1440; while(again<wake) again+=1440; last=again; return {wake,again}; }); }
+  function readState() { return {sleepStart:$('sleepStart').value, targetSleep:$('targetSleep').value, finalWake:$('finalWake').value, wakePeriods:wakeRows().map(row=>({wake:row.querySelector('.wake-time').value, again:row.querySelector('.again-time').value}))}; }
+  function saveCurrent() { localStorage.setItem(CURRENT_KEY,JSON.stringify(readState())); setStatus('💾 当前记录已自动保存'); }
+  function restoreCurrent() { try { const data=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null'); if (!data) return false; $('sleepStart').value=data.sleepStart||''; $('targetSleep').value=data.targetSleep||'8'; $('finalWake').value=data.finalWake||''; (data.wakePeriods||[]).forEach(p=>addWake(p.wake,p.again)); setStatus('📂 已恢复当前记录'); return true; } catch { localStorage.removeItem(CURRENT_KEY); return false; } }
+  function actualData() { const start=timeToMinutes($('sleepStart').value), endRaw=timeToMinutes($('finalWake').value); if(start===null || endRaw===null) throw new Error('请先填写首次入睡时间和最终起床时间'); let end=endRaw; while(end<start) end+=1440; const periods=normalize(start,collectPeriods()).filter(p=>p.wake<end); let awake=0, cursor=start; for(const p of periods){ if(p.wake<cursor) throw new Error('起夜时间顺序有重叠，请按实际发生顺序填写'); if(p.again>end) throw new Error('再次入睡时间不能晚于最终起床时间'); awake+=p.again-p.wake; cursor=p.again; } return {start,end,periods,awake,sleep:end-start-awake}; }
+  function renderTimeline(data) { const bar=$('timelineBar'); bar.replaceChildren(); const all=[{kind:'sleep',from:data.start,to:data.periods[0]?.wake??data.end}]; data.periods.forEach((p,i)=>{all.push({kind:'awake',from:p.wake,to:p.again}); all.push({kind:'sleep',from:p.again,to:data.periods[i+1]?.wake??data.end});}); const total=data.end-data.start; all.filter(s=>s.to>s.from).forEach(s=>{const el=document.createElement('div'); el.className=`segment ${s.kind}`; el.style.flex=`${s.to-s.from} 0 0`; el.title=`${s.kind==='sleep'?'睡眠':'清醒'}：${clock(s.from)} → ${clock(s.to)}（${duration(s.to-s.from)}）`; bar.append(el);}); $('timelineStart').textContent=clock(data.start); $('timelineEnd').textContent=clock(data.end); $('timelineSleep').textContent=duration(data.sleep); $('timelineAwake').textContent=duration(data.awake); $('timelineTotal').textContent=duration(total); $('timelineEmpty').classList.add('hidden'); $('timelineContent').classList.remove('hidden'); }
+  function calculateActual() { try { const data=actualData(); if(data.sleep<0) throw new Error('起夜时间不能超过总经过时间'); $('actualSleep').textContent=duration(data.sleep); $('sleepDetail').textContent=`总经过 ${duration(data.end-data.start)}，其中清醒／起夜 ${duration(data.awake)}。`; $('sleepResult').classList.remove('hidden'); renderTimeline(data); saveCurrent(); return data; } catch(error) { alert(error.message); return null; } }
+  function calculateWake() { try { const start=timeToMinutes($('sleepStart').value), target=Number($('targetSleep').value); if(start===null) throw new Error('请填写首次入睡时间'); if(!Number.isFinite(target)||target<=0) throw new Error('请输入正确的目标睡眠时间'); const periods=normalize(start,collectPeriods()); const awake=periods.reduce((sum,p)=>sum+p.again-p.wake,0), wake=start+target*60+awake; $('recommendedWake').textContent=clock(Math.round(wake)); $('wakeDetail').textContent=`目标睡眠 ${duration(target*60)}；已记录清醒时间 ${duration(awake)}。`; $('wakeResult').classList.remove('hidden'); saveCurrent(); } catch(error) { alert(error.message); } }
+  function history() { try { const list=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); return Array.isArray(list)?list:[]; } catch { return []; } }
+  function renderHistory() { const list=$('historyList'), entries=history(); list.replaceChildren(); if(!entries.length){list.innerHTML='<p class="empty">还没有已完成的睡眠记录。</p>';return;} entries.forEach(entry=>{const item=document.createElement('div'); item.className='history-item'; item.innerHTML=`<div class="item-head"><strong>📅 ${entry.date} · ${entry.sleepStart} → ${entry.finalWake}</strong><button type="button" class="danger compact">删除</button></div><div class="history-meta">实际睡眠 ${entry.sleepDuration} · 清醒／起夜 ${entry.awakeDuration} · ${entry.wakeCount} 次起夜</div>`; item.querySelector('button').addEventListener('click',()=>{if(confirm('确定删除这条已完成的睡眠记录吗？')){localStorage.setItem(HISTORY_KEY,JSON.stringify(history().filter(x=>x.id!==entry.id)));renderHistory();}}); list.append(item); }); }
+  function saveCompleted() { const data=calculateActual(); if(!data) return; const startDate=sleepDate($('sleepStart').value,$('finalWake').value); const entry={id:`${Date.now()}-${Math.random()}`,date:startDate,sleepStart:$('sleepStart').value,finalWake:$('finalWake').value,sleepDuration:duration(data.sleep),awakeDuration:duration(data.awake),wakeCount:data.periods.length}; const entries=history(); const duplicate=entries.some(x=>x.date===entry.date&&x.sleepStart===entry.sleepStart&&x.finalWake===entry.finalWake); if(duplicate){alert('这条睡眠记录已经保存过了。');return;} entries.unshift(entry); localStorage.setItem(HISTORY_KEY,JSON.stringify(entries.slice(0,90))); renderHistory(); setStatus('✅ 本次睡眠已保存到历史记录'); }
+  function clearCurrent() { if(!confirm('确定清空当前记录吗？已完成的历史记录不会删除。'))return; localStorage.removeItem(CURRENT_KEY); $('sleepStart').value=''; $('targetSleep').value='8'; $('finalWake').value=''; $('wakeList').replaceChildren(); $('wakeResult').classList.add('hidden'); $('sleepResult').classList.add('hidden'); $('timelineContent').classList.add('hidden'); $('timelineEmpty').classList.remove('hidden'); setStatus('🗑️ 当前记录已清空'); }
+  $('nowButton').addEventListener('click',()=>{$('sleepStart').value=nowTime();saveCurrent();}); $('addWake').addEventListener('click',()=>{addWake();saveCurrent();}); $('calculateWake').addEventListener('click',calculateWake); $('calculateActual').addEventListener('click',calculateActual); $('saveCompleted').addEventListener('click',saveCompleted); $('clearCurrent').addEventListener('click',clearCurrent); ['sleepStart','targetSleep','finalWake'].forEach(id=>$(id).addEventListener('input',saveCurrent));
+  if(!restoreCurrent()) $('sleepStart').value=nowTime(); renderHistory();
 })();
-</script></body></html>
+</script>
+</body>
+</html>
