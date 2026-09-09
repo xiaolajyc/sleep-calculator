@@ -39,7 +39,7 @@
     <span style="align-self:center;white-space:nowrap">分钟</span>
   </div>
 </div></div>
-    <button type="button" id="nowButton">🕐 使用当前时间作为入睡时间</button>
+    <button type="button" class="compact" id="nowButton">🕐 使用当前时间</button>
       <div class="row" style="margin-top:14px"><div class="field"><label>长期睡眠目标</label><div class="row" style="gap:8px;flex-wrap:nowrap"><input type="number" id="longTermHours" value="8" min="0" max="24" step="1"><span style="align-self:center;white-space:nowrap">小时</span><input type="number" id="longTermMinutes" value="0" min="0" max="59" step="1"><span style="align-self:center;white-space:nowrap">分钟</span></div></div></div><p class="small">下一次目标 = 长期目标 +（长期目标 − 全部历史记录的平均实际睡眠）。例如长期目标8小时、全部记录平均睡7小时50分钟，则下一次目标为8小时10分钟。</p>
   </section>
   <section class="card"><h2>2️⃣ 中间起夜记录</h2><div id="wakeList"></div><button type="button" id="addWake">＋ 添加一次起夜</button><p class="small">填写每次醒来和再次入睡时间；可添加多次。</p></section>
