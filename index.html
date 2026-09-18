@@ -66,84 +66,27 @@
   function readState() { return {sleepStartDate:$('sleepStartDate').value,sleepStart:$('sleepStart').value,targetSleepHours:$('targetSleepHours').value, targetSleepMinutes:$('targetSleepMinutes').value, longTermHours:$('longTermHours').value, longTermMinutes:$('longTermMinutes').value, finalWakeDate:$('finalWakeDate').value, finalWake:$('finalWake').value, wakePeriods:wakeRows().map(row=>({wake:row.querySelector('.wake-time').value,wakeDate:row.querySelector('.wake-date').value,again:row.querySelector('.again-time').value,againDate:row.querySelector('.again-date').value}))}; }
   function saveCurrent() { localStorage.setItem(CURRENT_KEY,JSON.stringify(readState())); setStatus('💾 当前记录已自动保存'); }
   function restoreCurrent() { try { const data=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null'); if (!data) return false; const legacyStart=data.sleepStart||''; const legacyEnd=data.finalWake||''; let startDate=data.sleepStartDate||todayDate(), endDate=data.finalWakeDate||todayDate(); if(!data.sleepStartDate && legacyStart && legacyEnd && timeToMinutes(legacyEnd)<timeToMinutes(legacyStart)){const d=new Date(`${startDate}T00:00:00`);d.setDate(d.getDate()+1);endDate=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;} $('sleepStartDate').value=startDate; $('sleepStart').value=legacyStart; $('sleepStart').dataset.inputDate=startDate; $('targetSleepHours').value=data.targetSleepHours ?? '8'; $('targetSleepMinutes').value=data.targetSleepMinutes ?? '0'; $('longTermHours').value=data.longTermHours ?? '8'; $('longTermMinutes').value=data.longTermMinutes ?? '0'; $('finalWakeDate').value=endDate; $('finalWake').value=legacyEnd; $('finalWake').dataset.inputDate=endDate; (data.wakePeriods||[]).forEach(p=>addWake(p.wake,p.again,p.wakeDate||startDate,p.againDate||p.wakeDate||startDate)); setStatus('📂 已恢复当前记录'); return true; } catch { localStorage.removeItem(CURRENT_KEY); return false; } }
-  function actualData() {
-    const start=dateTimeToMinutes($('sleepStartDate').value,$('sleepStart').value);
-    const end=dateTimeToMinutes($('finalWakeDate').value,$('finalWake').value);
-    if(start===null || end===null) throw new Error('请先填写首次入睡和最终起床时间');
-    if(end<=start) throw new Error('最终起床时间必须晚于首次入睡时间，请检查日期和时间');
+  function actualData() { const start=dateTimeToMinutes($('sleepStartDate').value,$('sleepStart').value), end=dateTimeToMinutes($('finalWakeDate').value,$('finalWake').value); if(start===null || end===null) throw new Error('请先填写首次入睡和最终起床的日期与时间'); if(end<=start) throw new Error('最终起床时间必须晚于首次入睡时间，请检查日期和时间'); const periods=normalize(start,collectPeriods()).filter(p=>p.wake<end); let awake=0, cursor=start; for(const p of periods){ if(p.wake<cursor) throw new Error('起夜时间顺序有重叠，请按实际发生顺序填写日期和时间'); if(p.again<=p.wake) throw new Error('再次入睡时间必须晚于醒来时间'); if(p.again>end) throw new Error('再次入睡时间不能晚于最终起床时间'); awake+=p.again-p.wake; cursor=p.again; } return {start,end,periods,awake,sleep:end-start-awake}; }
+  function renderTimeline(data) { const bar=$('timelineBar'), details=$('timelineDetails'); bar.replaceChildren(); details.replaceChildren(); const all=[{kind:'sleep',from:data.start,to:data.periods[0]?.wake??data.end}]; data.periods.forEach((p,i)=>{all.push({kind:'awake',from:p.wake,to:p.again}); all.push({kind:'sleep',from:p.again,to:data.periods[i+1]?.wake??data.end});}); const total=data.end-data.start; let sleepNo=0; all.filter(s=>s.to>s.from).forEach(s=>{const mins=s.to-s.from; const el=document.createElement('div'); el.className=`segment ${s.kind}`; el.style.flex=`${mins} 0 0`; el.title=`${s.kind==='sleep'?'睡眠':'清醒'}：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(mins)}）`; if(s.kind==='sleep'){ sleepNo++; const label=document.createElement('span'); label.className='segment-label'; label.textContent=duration(mins); el.append(label); const row=document.createElement('div'); row.className='timeline-detail'; row.innerHTML=`<span class="dot"></span><span>第${sleepNo}段睡眠：<strong>${dateTimeText(s.from)} → ${dateTimeText(s.to)}</strong> · ${duration(mins)}</span>`; details.append(row); } bar.append(el);}); $('timelineStart').textContent=clock(data.start); $('timelineEnd').textContent=clock(data.end); $('timelineSleep').textContent=duration(data.sleep); $('timelineAwake').textContent=duration(data.awake); $('timelineTotal').textContent=duration(total); $('timelineEmpty').classList.add('hidden'); $('timelineContent').classList.remove('hidden'); }
+  function calculateActual() { try { const data=actualData(); if(data.sleep<0) throw new Error('起夜时间不能超过总经过时间'); $('actualSleep').textContent=duration(data.sleep); $('sleepDetail').textContent=`总经过 ${duration(data.end-data.start)}，其中清醒／起夜 ${duration(data.awake)}。`; $('sleepResult').classList.remove('hidden'); renderTimeline(data); saveCurrent(); return data; } catch(error) { alert(error.message); return null; } }
+  function getTargetMinutes(){const h=Number($('targetSleepHours').value),m=Number($('targetSleepMinutes').value);if(!Number.isInteger(h)||h<0||h>24||!Number.isInteger(m)||m<0||m>59||(h===0&&m===0))throw new Error('请输入正确的目标睡眠时间');return h*60+m;}
+  function longTermMinutes(){const h=Number($('longTermHours').value),m=Number($('longTermMinutes').value);if(!Number.isInteger(h)||h<0||h>24||!Number.isInteger(m)||m<0||m>59||(h===0&&m===0))throw new Error('请输入正确的长期睡眠目标');return h*60+m;}
+  function parseDuration(t){const m=String(t||'').match(/^(?:(\d+)小时)?(?:(\d+)分钟)?$/);return m&& (m[1]||m[2]) ? Number(m[1]||0)*60+Number(m[2]||0):null;}
+  function setTargetInputs(n){n=Math.max(1,Math.min(1440,Math.round(n)));$('targetSleepHours').value=Math.floor(n/60);$('targetSleepMinutes').value=n%60;}
+  function adaptiveTarget() {
+    const entries=history();
+    if(!entries.length) return null;
+    const target=longTermMinutes();
+    const values=entries.map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);
+    if(!values.length) return null;
 
-    const periods=collectPeriods()
-      .filter(p=>p.wake<end)
-      .sort((a,b)=>a.wake-b.wake);
-
-    let awake=0;
-    let cursor=start;
-    const sleepSegments=[];
-
-    for(const p of periods){
-      if(p.wake<start) throw new Error('起夜时间不能早于首次入睡时间');
-      if(p.again<=p.wake) throw new Error('再次入睡时间必须晚于醒来时间');
-      if(p.wake<cursor) throw new Error('起夜时间顺序有重叠，请检查日期和时间');
-      if(p.again>end) throw new Error('再次入睡时间不能晚于最终起床时间');
-
-      if(p.wake>cursor) sleepSegments.push({from:cursor,to:p.wake});
-      awake += p.again-p.wake;
-      cursor=p.again;
-    }
-
-    if(cursor<end) sleepSegments.push({from:cursor,to:end});
-
-    // 实际睡眠 = 每一段真正睡着的时间之和。
-    // 因此每次起夜都会从实际睡眠中明确扣除。
-    const sleep=sleepSegments.reduce((sum,s)=>sum+(s.to-s.from),0);
-    const total=end-start;
-
-    return {start,end,periods,awake,sleep,total,sleepSegments};
+    // 累计睡眠盈亏：
+    // actual > target = 多睡，下一次减少同等时间；
+    // actual < target = 少睡，下一次增加同等时间。
+    const balance=values.reduce((sum,actual)=>sum+(actual-target),0);
+    return Math.max(1, Math.min(1440, Math.round(target-balance)));
   }
   function calculateWake(){try{const start=dateTimeToMinutes($('sleepStartDate').value,$('sleepStart').value),target=getTargetMinutes();if(start===null)throw new Error('请填写首次入睡日期与时间');const periods=normalize(start,collectPeriods()),awake=periods.reduce((s,p)=>s+p.again-p.wake,0),wake=start+target+awake;$('recommendedWake').textContent=dateTimeText(Math.round(wake));$('wakeDetail').textContent=`本次目标 ${duration(target)}；已记录清醒时间 ${duration(awake)}。`;$('wakeResult').classList.remove('hidden');saveCurrent();}catch(e){alert(e.message);}}
-  function renderTimeline(data){
-    const bar=$('timelineBar');
-    if(!bar) return;
-    bar.replaceChildren();
-    const segments=data.sleepSegments.map(s=>({kind:'sleep',from:s.from,to:s.to}));
-    data.periods.forEach(p=>segments.push({kind:'awake',from:p.wake,to:p.again}));
-    segments.sort((a,b)=>a.from-b.from);
-    const total=data.total;
-    segments.filter(s=>s.to>s.from).forEach(s=>{
-      const el=document.createElement('div');
-      el.className=`segment ${s.kind}`;
-      el.style.flex=`${s.to-s.from} 0 0`;
-      el.title=`${s.kind==='sleep'?'睡眠':'清醒/起夜'}：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(s.to-s.from)}）`;
-      if(s.kind==='sleep'){
-        const label=document.createElement('span');
-        label.className='segment-label';
-        label.textContent=duration(s.to-s.from);
-        el.append(label);
-      }
-      bar.append(el);
-    });
-    $('timelineStart').textContent=dateTimeText(data.start);
-    $('timelineEnd').textContent=dateTimeText(data.end);
-    $('timelineSleep').textContent=duration(data.sleep);
-    $('timelineAwake').textContent=duration(data.awake);
-    $('timelineTotal').textContent=duration(total);
-    $('timelineEmpty').classList.add('hidden');
-    $('timelineContent').classList.remove('hidden');
-  }
-  function calculateActual(){
-    try{
-      const data=actualData();
-      $('actualSleep').textContent=duration(data.sleep);
-      $('sleepDetail').textContent=`总经过 ${duration(data.total)}，其中清醒/起夜 ${duration(data.awake)}。`;
-      $('sleepResult').classList.remove('hidden');
-      renderTimeline(data);
-      saveCurrent();
-      return data;
-    }catch(e){
-      alert(e.message||'计算失败，请检查输入');
-      return null;
-    }
-  }
   function history() { try { const list=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); return Array.isArray(list)?list:[]; } catch { return []; } }
 
   function updateDashboard(){const entries=history(),values=entries.map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);try{$('metricLongTerm').textContent=duration(longTermMinutes());}catch(e){$('metricLongTerm').textContent='—';}$('metricCount').textContent=`${values.length}次`;$('metricTotal').textContent=values.length?`共 ${duration(values.reduce((a,b)=>a+b,0))} 睡眠`:'还没有完成记录';if(values.length){try{const target=longTermMinutes(),balance=values.reduce((s,a)=>s+(a-target),0);$('metricBalance').textContent=balance===0?'0分钟':balance>0?`+${duration(balance)}`:`-${duration(-balance)}`;$('metricNext').textContent=duration(adaptiveTarget());}catch(e){$('metricBalance').textContent='—';$('metricNext').textContent='—';}}else{$('metricBalance').textContent='—';$('metricNext').textContent='—';}const hc=$('historyCount');if(hc)hc.textContent=values.length?`共 ${values.length} 条记录`:'';}
@@ -193,7 +136,7 @@ ${balanceText}。
 长期目标 ${duration(target)}。
 下一次目标睡眠时间调整为 ${duration(next)}。`);} renderHistory(); }
   function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function exportData(){const payload={app:'sleep-calculator',version:7.8,exportedAt:new Date().toISOString(),current:null,history:history()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
+  function exportData(){const payload={app:'sleep-calculator',version:7.5,exportedAt:new Date().toISOString(),current:null,history:history()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
   function normalizeImportedHistory(raw){if(!Array.isArray(raw))throw new Error('备份中的历史记录格式不正确');return raw.filter(x=>x&&typeof x==='object').map(x=>({id:String(x.id||`${Date.now()}-${Math.random()}`),date:String(x.date||''),sleepStart:String(x.sleepStart||''),sleepStartDate:String(x.sleepStartDate||''),finalWake:String(x.finalWake||''),finalWakeDate:String(x.finalWakeDate||''),sleepDuration:String(x.sleepDuration||''),awakeDuration:String(x.awakeDuration||'0分钟'),wakeCount:Number.isFinite(Number(x.wakeCount))?Number(x.wakeCount):0})).filter(x=>x.date&&x.sleepStart&&x.finalWake&&parseDuration(x.sleepDuration)!==null);}
   function importDataFromText(text){let data;try{data=JSON.parse(text);}catch{throw new Error('无法读取备份：JSON 文件格式错误。');}const importedHistory=normalizeImportedHistory(data.history);let importedCurrent=null;if(data.current!==null&&data.current!==undefined){if(typeof data.current!=='object')throw new Error('备份中的当前记录格式不正确');importedCurrent=data.current;}if(!confirm(`准备导入 ${importedHistory.length} 条历史记录。\n\n导入后会覆盖当前设备上的历史记录和当前记录。\n\n确定继续吗？`))return;localStorage.setItem(HISTORY_KEY,JSON.stringify(importedHistory));if(importedCurrent)localStorage.setItem(CURRENT_KEY,JSON.stringify(importedCurrent));else localStorage.removeItem(CURRENT_KEY);location.reload();}
   function exportCsv(){const entries=history();if(!entries.length){alert('目前没有可导出的历史记录。');return;}const header=['日期','首次入睡日期','首次入睡','最终起床日期','最终起床','实际睡眠','清醒/起夜','起夜次数'];const rows=entries.map(x=>[x.date,x.sleepStartDate||x.date.replaceAll('/','-'),x.sleepStart,x.finalWakeDate||'',x.finalWake,x.sleepDuration,x.awakeDuration,x.wakeCount]);const csv='\ufeff'+[header,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');downloadFile(`sleep-history-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8');setStatus('📊 历史记录 CSV 已导出');}
