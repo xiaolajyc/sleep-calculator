@@ -101,6 +101,49 @@
     return {start,end,periods,awake,sleep,total,sleepSegments};
   }
   function calculateWake(){try{const start=dateTimeToMinutes($('sleepStartDate').value,$('sleepStart').value),target=getTargetMinutes();if(start===null)throw new Error('请填写首次入睡日期与时间');const periods=normalize(start,collectPeriods()),awake=periods.reduce((s,p)=>s+p.again-p.wake,0),wake=start+target+awake;$('recommendedWake').textContent=dateTimeText(Math.round(wake));$('wakeDetail').textContent=`本次目标 ${duration(target)}；已记录清醒时间 ${duration(awake)}。`;$('wakeResult').classList.remove('hidden');saveCurrent();}catch(e){alert(e.message);}}
+  function renderTimeline(data){
+    const bar=$('timelineBar');
+    if(!bar) return;
+    bar.replaceChildren();
+    const segments=data.sleepSegments.map(s=>({kind:'sleep',from:s.from,to:s.to}));
+    data.periods.forEach(p=>segments.push({kind:'awake',from:p.wake,to:p.again}));
+    segments.sort((a,b)=>a.from-b.from);
+    const total=data.total;
+    segments.filter(s=>s.to>s.from).forEach(s=>{
+      const el=document.createElement('div');
+      el.className=`segment ${s.kind}`;
+      el.style.flex=`${s.to-s.from} 0 0`;
+      el.title=`${s.kind==='sleep'?'睡眠':'清醒/起夜'}：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(s.to-s.from)}）`;
+      if(s.kind==='sleep'){
+        const label=document.createElement('span');
+        label.className='segment-label';
+        label.textContent=duration(s.to-s.from);
+        el.append(label);
+      }
+      bar.append(el);
+    });
+    $('timelineStart').textContent=dateTimeText(data.start);
+    $('timelineEnd').textContent=dateTimeText(data.end);
+    $('timelineSleep').textContent=duration(data.sleep);
+    $('timelineAwake').textContent=duration(data.awake);
+    $('timelineTotal').textContent=duration(total);
+    $('timelineEmpty').classList.add('hidden');
+    $('timelineContent').classList.remove('hidden');
+  }
+  function calculateActual(){
+    try{
+      const data=actualData();
+      $('actualSleep').textContent=duration(data.sleep);
+      $('sleepDetail').textContent=`总经过 ${duration(data.total)}，其中清醒/起夜 ${duration(data.awake)}。`;
+      $('sleepResult').classList.remove('hidden');
+      renderTimeline(data);
+      saveCurrent();
+      return data;
+    }catch(e){
+      alert(e.message||'计算失败，请检查输入');
+      return null;
+    }
+  }
   function history() { try { const list=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); return Array.isArray(list)?list:[]; } catch { return []; } }
 
   function updateDashboard(){const entries=history(),values=entries.map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);try{$('metricLongTerm').textContent=duration(longTermMinutes());}catch(e){$('metricLongTerm').textContent='—';}$('metricCount').textContent=`${values.length}次`;$('metricTotal').textContent=values.length?`共 ${duration(values.reduce((a,b)=>a+b,0))} 睡眠`:'还没有完成记录';if(values.length){try{const target=longTermMinutes(),balance=values.reduce((s,a)=>s+(a-target),0);$('metricBalance').textContent=balance===0?'0分钟':balance>0?`+${duration(balance)}`:`-${duration(-balance)}`;$('metricNext').textContent=duration(adaptiveTarget());}catch(e){$('metricBalance').textContent='—';$('metricNext').textContent='—';}}else{$('metricBalance').textContent='—';$('metricNext').textContent='—';}const hc=$('historyCount');if(hc)hc.textContent=values.length?`共 ${values.length} 条记录`:'';}
