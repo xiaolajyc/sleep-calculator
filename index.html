@@ -50,9 +50,9 @@
   <label class="drive-auto"><input type="checkbox" id="driveAutoSync"><span>数据修改后自动同步</span></label>
   <div class="drive-note" id="driveNote">数据仍同时保存在本机浏览器。首次连接会弹出 Google 授权窗口。</div>
 </section>
-<section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V8.3</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section><div class="footer">Sleep Well, Live Better ♡</div></div></div></main>
+<section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V8.4</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section><div class="footer">Sleep Well, Live Better ♡</div></div></div></main>
 <script id="v8-3-google-drive">
-/* V8.3: Google Drive sync for Sleep Calculator, modeled on the working Todo Calendar implementation. */
+/* V8.4: Google Drive sync for Sleep Calculator, modeled on the working Todo Calendar implementation. */
 const DRIVE_CLIENT_ID='801960562511-885mk42o96piugu8egtp93ldhrt6ilgp.apps.googleusercontent.com';
 const DRIVE_SCOPE='https://www.googleapis.com/auth/drive.file';
 const DRIVE_FILE_NAME='sleep-calculator-sync-v1.json';
@@ -115,10 +115,10 @@ function drivePayload(){
   try{current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null')}catch{}
   return {
     schema:'sleep-calculator-sync-v1',
-    appVersion:'V8.3',
+    appVersion:'V8.4',
     updatedAt:new Date().toISOString(),
     current,
-    history:history()
+    history:getHistory()
   };
 }
 function driveSetStatus(text,type=''){
@@ -357,7 +357,7 @@ function driveBindUI(){
   function parseDuration(t){const m=String(t||'').match(/^(?:(\d+)小时)?(?:(\d+)分钟)?$/);return m&& (m[1]||m[2]) ? Number(m[1]||0)*60+Number(m[2]||0):null;}
   function setTargetInputs(n){n=Math.max(1,Math.min(1440,Math.round(n)));$('targetSleepHours').value=Math.floor(n/60);$('targetSleepMinutes').value=n%60;}
   function adaptiveTarget() {
-    const entries=history();
+    const entries=getHistory();
     if(!entries.length) return null;
     const target=longTermMinutes();
     const values=entries.map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);
@@ -370,11 +370,11 @@ function driveBindUI(){
     return Math.max(1, Math.min(1440, Math.round(target-balance)));
   }
   function calculateWake(){try{const start=dateTimeToMinutes($('sleepStartDate').value,$('sleepStart').value),target=getTargetMinutes();if(start===null)throw new Error('请填写首次入睡日期与时间');const periods=normalize(start,collectPeriods()),awake=periods.reduce((s,p)=>s+p.again-p.wake,0),wake=start+target+awake;$('recommendedWake').textContent=dateTimeText(Math.round(wake));$('wakeDetail').textContent=`本次目标 ${duration(target)}；已记录清醒时间 ${duration(awake)}。`;$('wakeResult').classList.remove('hidden');saveCurrent();}catch(e){alert(e.message);}}
-  function history() { try { const list=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); return Array.isArray(list)?list:[]; } catch { return []; } }
+  function getHistory() { try { const list=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); return Array.isArray(list)?list:[]; } catch { return []; } }
 
-  function updateDashboard(){const entries=history(),values=entries.map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);try{$('metricLongTerm').textContent=duration(longTermMinutes());}catch(e){$('metricLongTerm').textContent='—';}$('metricCount').textContent=`${values.length}次`;$('metricTotal').textContent=values.length?`共 ${duration(values.reduce((a,b)=>a+b,0))} 睡眠`:'还没有完成记录';if(values.length){try{const target=longTermMinutes(),balance=values.reduce((s,a)=>s+(a-target),0);$('metricBalance').textContent=balance===0?'0分钟':balance>0?`+${duration(balance)}`:`-${duration(-balance)}`;$('metricNext').textContent=duration(adaptiveTarget());}catch(e){$('metricBalance').textContent='—';$('metricNext').textContent='—';}}else{$('metricBalance').textContent='—';$('metricNext').textContent='—';}const hc=$('historyCount');if(hc)hc.textContent=values.length?`共 ${values.length} 条记录`:'';}
+  function updateDashboard(){const entries=getHistory(),values=entries.map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);try{$('metricLongTerm').textContent=duration(longTermMinutes());}catch(e){$('metricLongTerm').textContent='—';}$('metricCount').textContent=`${values.length}次`;$('metricTotal').textContent=values.length?`共 ${duration(values.reduce((a,b)=>a+b,0))} 睡眠`:'还没有完成记录';if(values.length){try{const target=longTermMinutes(),balance=values.reduce((s,a)=>s+(a-target),0);$('metricBalance').textContent=balance===0?'0分钟':balance>0?`+${duration(balance)}`:`-${duration(-balance)}`;$('metricNext').textContent=duration(adaptiveTarget());}catch(e){$('metricBalance').textContent='—';$('metricNext').textContent='—';}}else{$('metricBalance').textContent='—';$('metricNext').textContent='—';}const hc=$('historyCount');if(hc)hc.textContent=values.length?`共 ${values.length} 条记录`:'';}
   function formatMonthDay(value){const m=String(value||'').match(/^(?:\d{4}[\/-])?(\d{1,2})[\/-](\d{1,2})/);return m?`${Number(m[1])}/${Number(m[2])}`:String(value||'');} function renderHistory() {
-    const list=$('historyList'), entries=history();
+    const list=$('historyList'), entries=getHistory();
     list.replaceChildren();
     const summary=$('historySummary');
     if(summary){
@@ -399,7 +399,7 @@ function driveBindUI(){
       item.innerHTML=`<div class="item-head"><strong>📅 ${formatMonthDay(entry.date)} · ${entry.sleepStart} → ${entry.finalWake}</strong><button type="button" class="danger compact">删除</button></div><div class="history-meta">实际睡眠 ${entry.sleepDuration} · 清醒／起夜 ${entry.awakeDuration} · ${entry.wakeCount} 次起夜</div>`;
       item.querySelector('button').addEventListener('click',()=>{
         if(confirm('确定删除这条已完成的睡眠记录吗？')){
-          localStorage.setItem(HISTORY_KEY,JSON.stringify(history().filter(x=>x.id!==entry.id))); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange();
+          localStorage.setItem(HISTORY_KEY,JSON.stringify(getHistory().filter(x=>x.id!==entry.id))); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange();
           const next=adaptiveTarget();
           if(next!==null) setTargetInputs(next);
           renderHistory();
@@ -409,8 +409,8 @@ function driveBindUI(){
     });
     updateDashboard();
   }
-  function saveCompleted() { const data=calculateActual(); if(!data) return; const startDate=$('sleepStartDate').value.replaceAll('-','/'); const entry={id:`${Date.now()}-${Math.random()}`,date:startDate,sleepStart:$('sleepStart').value,finalWake:$('finalWake').value,sleepStartDate:$('sleepStartDate').value,finalWakeDate:$('finalWakeDate').value,sleepDuration:duration(data.sleep),awakeDuration:duration(data.awake),wakeCount:data.periods.length}; const entries=history(); const duplicate=entries.some(x=>x.date===entry.date&&x.sleepStart===entry.sleepStart&&x.finalWake===entry.finalWake); if(duplicate){alert('这条睡眠记录已经保存过了。');return;} entries.unshift(entry); localStorage.setItem(HISTORY_KEY,JSON.stringify(entries)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); const next=adaptiveTarget(); if(next!==null){setTargetInputs(next); saveCurrent(); const target=longTermMinutes();
-      const vals=history().map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);
+  function saveCompleted() { const data=calculateActual(); if(!data) return; const startDate=$('sleepStartDate').value.replaceAll('-','/'); const entry={id:`${Date.now()}-${Math.random()}`,date:startDate,sleepStart:$('sleepStart').value,finalWake:$('finalWake').value,sleepStartDate:$('sleepStartDate').value,finalWakeDate:$('finalWakeDate').value,sleepDuration:duration(data.sleep),awakeDuration:duration(data.awake),wakeCount:data.periods.length}; const entries=getHistory(); const duplicate=entries.some(x=>x.date===entry.date&&x.sleepStart===entry.sleepStart&&x.finalWake===entry.finalWake); if(duplicate){alert('这条睡眠记录已经保存过了。');return;} entries.unshift(entry); localStorage.setItem(HISTORY_KEY,JSON.stringify(entries)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); const next=adaptiveTarget(); if(next!==null){setTargetInputs(next); saveCurrent(); const target=longTermMinutes();
+      const vals=getHistory().map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);
       const balance=vals.reduce((sum,actual)=>sum+(actual-target),0);
       const balanceText=balance===0?'刚好达到长期目标':balance>0?`累计多睡 ${duration(balance)}`:`累计少睡 ${duration(-balance)}`;
       setStatus(`✅ 本次睡眠已保存；${balanceText}；下一次目标 ${duration(next)}`);
@@ -419,11 +419,11 @@ ${balanceText}。
 长期目标 ${duration(target)}。
 下一次目标睡眠时间调整为 ${duration(next)}。`);} renderHistory(); }
   function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function exportData(){const payload={app:'sleep-calculator',version:'V8.3',exportedAt:new Date().toISOString(),current:null,history:history()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
+  function exportData(){const payload={app:'sleep-calculator',version:'V8.4',exportedAt:new Date().toISOString(),current:null,history:getHistory()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
   function normalizeImportedHistory(raw){if(!Array.isArray(raw))throw new Error('备份中的历史记录格式不正确');return raw.filter(x=>x&&typeof x==='object').map(x=>({id:String(x.id||`${Date.now()}-${Math.random()}`),date:String(x.date||''),sleepStart:String(x.sleepStart||''),sleepStartDate:String(x.sleepStartDate||''),finalWake:String(x.finalWake||''),finalWakeDate:String(x.finalWakeDate||''),sleepDuration:String(x.sleepDuration||''),awakeDuration:String(x.awakeDuration||'0分钟'),wakeCount:Number.isFinite(Number(x.wakeCount))?Number(x.wakeCount):0})).filter(x=>x.date&&x.sleepStart&&x.finalWake&&parseDuration(x.sleepDuration)!==null);}
   function importDataFromText(text){let data;try{data=JSON.parse(text);}catch{throw new Error('无法读取备份：JSON 文件格式错误。');}const importedHistory=normalizeImportedHistory(data.history);let importedCurrent=null;if(data.current!==null&&data.current!==undefined){if(typeof data.current!=='object')throw new Error('备份中的当前记录格式不正确');importedCurrent=data.current;}if(!confirm(`准备导入 ${importedHistory.length} 条历史记录。\n\n导入后会覆盖当前设备上的历史记录和当前记录。\n\n确定继续吗？`))return;localStorage.setItem(HISTORY_KEY,JSON.stringify(importedHistory)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); if(importedCurrent)localStorage.setItem(CURRENT_KEY,JSON.stringify(importedCurrent));else localStorage.removeItem(CURRENT_KEY);location.reload();}
-  function exportCsv(){const entries=history();if(!entries.length){alert('目前没有可导出的历史记录。');return;}const header=['日期','首次入睡日期','首次入睡','最终起床日期','最终起床','实际睡眠','清醒/起夜','起夜次数'];const rows=entries.map(x=>[x.date,x.sleepStartDate||x.date.replaceAll('/','-'),x.sleepStart,x.finalWakeDate||'',x.finalWake,x.sleepDuration,x.awakeDuration,x.wakeCount]);const csv='\ufeff'+[header,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');downloadFile(`sleep-history-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8');setStatus('📊 历史记录 CSV 已导出');}
-  function clearHistory(){const count=history().length;if(!count){alert('目前没有历史记录。');return;}if(!confirm(`确定删除全部 ${count} 条历史记录吗？\n\n此操作无法撤销。建议先导出 JSON 备份。`))return;localStorage.removeItem(HISTORY_KEY); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); renderHistory();const target=longTermMinutes();setTargetInputs(target);saveCurrent();setStatus('🗑️ 全部历史记录已清空');}
+  function exportCsv(){const entries=getHistory();if(!entries.length){alert('目前没有可导出的历史记录。');return;}const header=['日期','首次入睡日期','首次入睡','最终起床日期','最终起床','实际睡眠','清醒/起夜','起夜次数'];const rows=entries.map(x=>[x.date,x.sleepStartDate||x.date.replaceAll('/','-'),x.sleepStart,x.finalWakeDate||'',x.finalWake,x.sleepDuration,x.awakeDuration,x.wakeCount]);const csv='\ufeff'+[header,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');downloadFile(`sleep-history-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8');setStatus('📊 历史记录 CSV 已导出');}
+  function clearHistory(){const count=getHistory().length;if(!count){alert('目前没有历史记录。');return;}if(!confirm(`确定删除全部 ${count} 条历史记录吗？\n\n此操作无法撤销。建议先导出 JSON 备份。`))return;localStorage.removeItem(HISTORY_KEY); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); renderHistory();const target=longTermMinutes();setTargetInputs(target);saveCurrent();setStatus('🗑️ 全部历史记录已清空');}
   function clearCurrent() { if(!confirm('确定清空当前记录吗？已完成的历史记录不会删除。'))return; localStorage.removeItem(CURRENT_KEY); $('sleepStart').value=''; $('sleepStartDate').value=todayDate(); $('targetSleepHours').value='8'; $('targetSleepMinutes').value='0'; $('longTermHours').value='8'; $('longTermMinutes').value='0'; $('finalWake').value=''; $('finalWakeDate').value=todayDate(); $('wakeList').replaceChildren(); $('wakeResult').classList.add('hidden'); $('sleepResult').classList.add('hidden'); $('timelineContent').classList.add('hidden'); $('timelineEmpty').classList.remove('hidden'); setStatus('🗑️ 当前记录已清空'); }
   $('nowButton').addEventListener('click',()=>{$('sleepStartDate').value=todayDate();$('sleepStart').dataset.inputDate=todayDate();$('sleepStartDate').dataset.userSet='1';$('sleepStart').value=nowTime();$('finalWakeDate').dataset.userSet='';syncMainDates();saveCurrent();}); $('exportData').addEventListener('click',exportData); $('importData').addEventListener('click',()=>$('importFile').click()); $('importFile').addEventListener('change',e=>{const file=e.target.files?.[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{importDataFromText(String(reader.result||''));}catch(err){alert(err.message||'导入失败');}e.target.value='';};reader.readAsText(file);}); $('exportCsv').addEventListener('click',exportCsv); $('clearHistory').addEventListener('click',clearHistory); $('addWake').addEventListener('click',()=>{addWake();saveCurrent();}); $('calculateWake').addEventListener('click',calculateWake); $('calculateActual').addEventListener('click',calculateActual); $('saveCompleted').addEventListener('click',saveCompleted); $('clearCurrent').addEventListener('click',clearCurrent); ['sleepStart','targetSleepHours','targetSleepMinutes','longTermHours','longTermMinutes','finalWake'].forEach(id=>$(id).addEventListener('input',()=>{if($(id).type==='time' && !$(id).dataset.inputDate)$(id).dataset.inputDate=todayDate();syncMainDates();saveCurrent();updateDashboard();renderHistory();})); $('sleepStartDate').addEventListener('input',()=>{ $('sleepStartDate').dataset.userSet='1'; syncMainDates(); saveCurrent(); }); $('finalWakeDate').addEventListener('input',()=>{ $('finalWakeDate').dataset.userSet='1'; saveCurrent(); });
   if(typeof driveBindUI==='function')driveBindUI(); if(!restoreCurrent()){ const d=todayDate(); $('sleepStartDate').value=d; $('sleepStart').value=nowTime(); $('sleepStart').dataset.inputDate=d; $('finalWakeDate').value=d; } try{const next=adaptiveTarget();if(next!==null)setTargetInputs(next);}catch(e){} renderHistory(); updateDashboard();

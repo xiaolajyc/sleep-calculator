@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sleep-calculator-v8.3';
+const CACHE_NAME = 'sleep-calculator-v8.4';
 const APP_SHELL = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon-180.png'];
 
 self.addEventListener('install', event => {
