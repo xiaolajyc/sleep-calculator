@@ -518,8 +518,7 @@ function driveBindUI(){
   const NAP_KEY='sleepCalculator.naps.v1';
   function getNaps(){try{const list=JSON.parse(localStorage.getItem(NAP_KEY)||'[]');return Array.isArray(list)?list:[]}catch{return []}}
   function saveNaps(list){localStorage.setItem(NAP_KEY,JSON.stringify(list));if(typeof driveMarkLocalChange==='function')driveMarkLocalChange()}
-  function napDateTime(n){return dateTimeToMinutes(n.date,n.time)}
-  function applyNapAutoDates(row,state){const st=row.querySelector('.nap-st'),et=row.querySelector('.nap-et');const sv=st.value,ev=et.value;if(sv&&!state.startDate)state.startDate=todayDate();if(ev&&!state.endDate)state.endDate=todayDate();if(state.startDate&&state.endDate&&sv&&ev){const sm=timeToMinutes(sv),em=timeToMinutes(ev);if(sm!==null&&em!==null&&state.endDate===state.startDate&&em<=sm)state.endDate=shiftDate(state.startDate,1);}}
+  function napDateTime(n){return dateTimeToMinutes(n.startDate,n.startTime)}
   function napDuration(n){const s=napDateTime({date:n.startDate,time:n.startTime}),e=napDateTime({date:n.endDate,time:n.endTime});return s!==null&&e!==null&&e>s?e-s:null}
   function historyEndMinutes(entry){return dateTimeToMinutes(entry.finalWakeDate,entry.finalWake)}
   function findNapTargetHistory(nap){
@@ -578,7 +577,7 @@ function driveBindUI(){
         const item=document.createElement('div'); item.className='nap-item'; item.dataset.id=n.id;
         const target=getHistory().find(e=>e.id===n.sleepId), mins=napDuration(n)||0;
         const belongs=target?`归入 ${formatMonthDay(target.date)} 主睡眠`:'未归属主睡眠';
-        const start=n.startTime||'--:--', end=n.endTime||'--:--';
+        const start=n.startDate?`${formatMonthDay(n.startDate)} ${n.startTime||'--:--'}`:(n.startTime||'--:--'), end=n.endDate?`${formatMonthDay(n.endDate)} ${n.endTime||'--:--'}`:(n.endTime||'--:--');
         item.innerHTML=`<div class="nap-summary"><div class="nap-summary-main"><div class="nap-summary-time"><span class="sun">☀️</span><span>${start} → ${end}</span></div><div class="nap-summary-meta">${belongs}</div></div><div class="nap-summary-duration">${duration(mins)}</div><div class="nap-summary-actions"><button type="button" class="compact nap-edit">编辑</button><button type="button" class="danger compact nap-delete">删除</button></div></div>`;
         item.querySelector('.nap-edit').addEventListener('click',()=>openNapEditor(item,n));
         item.querySelector('.nap-delete').addEventListener('click',()=>{
@@ -601,12 +600,13 @@ function driveBindUI(){
       item=document.querySelector(`.nap-item[data-id="${CSS.escape(n.id)}"]`);
       if(!item)return;
     }
-    const state={startDate:n.startDate||'',endDate:n.endDate||''};
+    const state={startDate:n.startDate||todayDate(),endDate:n.endDate||n.startDate||todayDate()};
     const editor=document.createElement('div'); editor.className='nap-editor';
-    editor.innerHTML=`<div class="nap-grid"><label>开始时间<input type="time" class="nap-st" value="${n.startTime||''}"></label><label>结束时间<input type="time" class="nap-et" value="${n.endTime||''}"></label></div><div class="nap-duration">午睡时长：${duration(napDuration(n)||0)}</div><div class="nap-belongs">日期会根据实际输入时间自动处理</div><div class="nap-actions"><button type="button" class="primary nap-save-edit">保存修改</button><button type="button" class="secondary nap-cancel-edit">取消</button></div>`;
+    editor.innerHTML=`<div class="nap-grid"><label>开始日期<input type="date" class="nap-sd" value="${state.startDate}"></label><label>开始时间<input type="time" class="nap-st" value="${n.startTime||''}"></label><label>结束日期<input type="date" class="nap-ed" value="${state.endDate}"></label><label>结束时间<input type="time" class="nap-et" value="${n.endTime||''}"></label></div><div class="nap-duration">午睡时长：${duration(napDuration(n)||0)}</div><div class="nap-belongs">开始日期和结束日期请自行输入，可跨天。</div><div class="nap-actions"><button type="button" class="primary nap-save-edit">保存修改</button><button type="button" class="secondary nap-cancel-edit">取消</button></div>`;
     item.appendChild(editor);
     const validate=()=>{
-      applyNapAutoDates(item,state);
+      state.startDate=editor.querySelector('.nap-sd').value;
+      state.endDate=editor.querySelector('.nap-ed').value;
       const draft={startDate:state.startDate,startTime:editor.querySelector('.nap-st').value,endDate:state.endDate,endTime:editor.querySelector('.nap-et').value};
       const m=napDuration(draft);
       editor.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;
@@ -615,7 +615,7 @@ function driveBindUI(){
     editor.querySelectorAll('input').forEach(el=>el.addEventListener('input',validate));
     editor.querySelector('.nap-cancel-edit').addEventListener('click',()=>renderNaps());
     editor.querySelector('.nap-save-edit').addEventListener('click',()=>{
-      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始和结束时间','error');return}
+      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始/结束日期和时间','error');return}
       const updated={...n,startDate:state.startDate,startTime:editor.querySelector('.nap-st').value,endDate:state.endDate,endTime:editor.querySelector('.nap-et').value};
       const m=napDuration(updated); if(m===null){setNapStatus('无法保存：请填写有效的午睡时间','error');return}
       const target=findNapTargetHistory(updated); if(!target){setNapStatus('无法归属：请先保存主睡眠记录，再保存这次午睡','error');return}
@@ -626,15 +626,15 @@ function driveBindUI(){
     });
   }
   function createNapDraft(){
-    const item=document.createElement('div'), draftId=`draft-${Date.now()}-${Math.random()}`, state={startDate:'',endDate:''};
+    const item=document.createElement('div'), draftId=`draft-${Date.now()}-${Math.random()}`, defaultDate=todayDate(), state={startDate:defaultDate,endDate:defaultDate};
     item.className='nap-item nap-draft'; item.dataset.id=draftId;
-    item.innerHTML=`<div class="nap-head"><strong>新午睡</strong><button type="button" class="danger compact nap-cancel">取消</button></div><div class="nap-grid"><label>开始时间<input type="time" class="nap-st"></label><label>结束时间<input type="time" class="nap-et"></label></div><div class="nap-duration">请填写完整时间后保存</div><div class="nap-belongs">日期会根据你实际输入时间自动记录</div><div class="nap-actions"><button type="button" class="primary nap-save-new">保存午睡</button></div>`;
+    item.innerHTML=`<div class="nap-head"><strong>新午睡</strong><button type="button" class="danger compact nap-cancel">取消</button></div><div class="nap-grid"><label>开始日期<input type="date" class="nap-sd" value="${defaultDate}"></label><label>开始时间<input type="time" class="nap-st"></label><label>结束日期<input type="date" class="nap-ed" value="${defaultDate}"></label><label>结束时间<input type="time" class="nap-et"></label></div><div class="nap-duration">请填写完整日期和时间后保存</div><div class="nap-belongs">开始日期和结束日期请自行输入，可跨天。</div><div class="nap-actions"><button type="button" class="primary nap-save-new">保存午睡</button></div>`;
     $('napList').prepend(item); napDraftState=state;
-    const validate=()=>{applyNapAutoDates(item,state);const n={startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};const m=napDuration(n);item.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;return m!==null};
+    const validate=()=>{state.startDate=item.querySelector('.nap-sd').value;state.endDate=item.querySelector('.nap-ed').value;const n={startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};const m=napDuration(n);item.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡日期和时间':`午睡时长：${duration(m)}`;return m!==null};
     item.querySelectorAll('input').forEach(el=>el.addEventListener('input',validate));
     item.querySelector('.nap-cancel').addEventListener('click',()=>{napDraftState=null;item.remove()});
     item.querySelector('.nap-save-new').addEventListener('click',()=>{
-      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始和结束时间','error');return}
+      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始/结束日期和时间','error');return}
       const n={id:`${Date.now()}-${Math.random()}`,startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};
       const m=napDuration(n); if(m===null){setNapStatus('无法保存：请填写有效的午睡时间','error');return}
       const target=findNapTargetHistory(n); if(!target){setNapStatus('无法保存：请先保存主睡眠记录，系统才能确定这次午睡归属','error');return}
@@ -806,8 +806,8 @@ if('serviceWorker' in navigator){
       const reg=await navigator.serviceWorker.register('./sw.js?v=10.4',{updateViaCache:'none'});
       await reg.update();
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.5')){
-          sessionStorage.setItem('sleep-sw-reloaded-v10.5','1');
+        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.6')){
+          sessionStorage.setItem('sleep-sw-reloaded-v10.6','1');
           location.reload();
         }
       });
