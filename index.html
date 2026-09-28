@@ -161,7 +161,7 @@ body{padding-bottom:82px}
 </div>
 <label class="drive-auto"><input id="driveAutoSync" type="checkbox"/><span>数据修改后自动同步</span></label>
 <div class="drive-note" id="driveNote">数据仍同时保存在本机浏览器。首次连接会弹出 Google 授权窗口。</div>
-</section><section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V10.5</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section></section><nav aria-label="主导航" class="bottom-nav">
+</section><section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V10.6</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section></section><nav aria-label="主导航" class="bottom-nav">
 <button class="nav-item active" data-tab-target="today" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.2 15.1A8.2 8.2 0 0 1 8.9 3.8 8.2 8.2 0 1 0 20.2 15.1Z"/><path d="M17.2 4.2v2.2M18.3 5.3h-2.2"/></svg></span><small>今日</small></button>
 <button class="nav-item" data-tab-target="record" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.5h17v7.2h-17z"/><path d="M5.5 11.5V8.7a2 2 0 0 1 2-2h3.2a2 2 0 0 1 2 2v2.8"/><path d="M14 8.2h5.5"/><path d="M16.75 5.45v5.5"/></svg></span><small>记录</small></button>
 <button class="nav-item" data-tab-target="history" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.7v4.8l3.1 1.8"/><path d="M4.5 5.7 3.2 4.4"/></svg></span><small>历史</small></button>
@@ -252,7 +252,7 @@ function drivePayload(){
   try{current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null')}catch{}
   return {
     schema:'sleep-calculator-sync-v1',
-    appVersion:'V10.5',
+    appVersion:'V10.6',
     updatedAt:new Date().toISOString(),
     current,
     history:window.sleepAppStore.getHistory(),
@@ -504,7 +504,7 @@ function driveBindUI(){
     const bar=$('timelineBar'), details=$('timelineDetails'); bar.replaceChildren(); details.replaceChildren();
     const currentEntry=getHistory().find(e=>e.sleepStartDate===$('sleepStartDate').value && e.sleepStart===$('sleepStart').value && e.finalWakeDate===$('finalWakeDate').value && e.finalWake===$('finalWake').value);
     const naps=currentEntry?getNaps().filter(n=>n.sleepId===currentEntry.id&&napDuration(n)!==null):[];
-    const napRanges=naps.map(n=>({kind:'nap',from:napDateTime(n),to:napDateTime(n)+napDuration(n),nap:n})).filter(x=>x.from!==null&&x.to>x.from);
+    const napRanges=naps.map(n=>{const from=napDateTime(n,'start'),dur=napDuration(n);return {kind:'nap',from,to:from!==null&&dur!==null?from+dur:null,nap:n};}).filter(x=>x.from!==null&&x.to!==null&&x.to>x.from);
     const combinedStart=Math.min(data.start,...napRanges.map(n=>n.from));
     const combinedEnd=Math.max(data.end,...napRanges.map(n=>n.to));
     const total=combinedEnd-combinedStart;
@@ -549,14 +549,40 @@ function driveBindUI(){
   const NAP_KEY='sleepCalculator.naps.v1';
   function getNaps(){try{const list=JSON.parse(localStorage.getItem(NAP_KEY)||'[]');return Array.isArray(list)?list:[]}catch{return []}}
   function saveNaps(list){localStorage.setItem(NAP_KEY,JSON.stringify(list));if(typeof driveMarkLocalChange==='function')driveMarkLocalChange()}
-  function napDateTime(n){return dateTimeToMinutes(n.startDate,n.startTime)}
-  function applyNapAutoDates(row,state){const st=row.querySelector('.nap-st'),et=row.querySelector('.nap-et');const sv=st.value,ev=et.value;if(sv&&!state.startDate)state.startDate=todayDate();if(ev&&!state.endDate)state.endDate=todayDate();if(state.startDate&&state.endDate&&sv&&ev){const sm=timeToMinutes(sv),em=timeToMinutes(ev);if(sm!==null&&em!==null&&state.endDate===state.startDate&&em<=sm)state.endDate=shiftDate(state.startDate,1);}}
-  function napDuration(n){const s=napDateTime({date:n.startDate,time:n.startTime}),e=napDateTime({date:n.endDate,time:n.endTime});return s!==null&&e!==null&&e>s?e-s:null}
-  function historyEndMinutes(entry){return dateTimeToMinutes(entry.finalWakeDate,entry.finalWake)}
+  function getNaps(){
+    try{
+      const list=JSON.parse(localStorage.getItem(NAP_KEY)||'[]');
+      return Array.isArray(list)?list:[];
+    }catch{return []}
+  }
+  function saveNaps(list){
+    localStorage.setItem(NAP_KEY,JSON.stringify(Array.isArray(list)?list:[]));
+    if(typeof driveMarkLocalChange==='function')driveMarkLocalChange();
+  }
+
+  // Nap records use startDate/startTime/endDate/endTime.
+  function napDateTime(n,part='start'){
+    if(part==='end') return dateTimeToMinutes(n.endDate,n.endTime);
+    return dateTimeToMinutes(n.startDate,n.startTime);
+  }
+  function napDuration(n){
+    const s=napDateTime(n,'start'), e=napDateTime(n,'end');
+    return s!==null&&e!==null&&e>s?e-s:null;
+  }
+  function historyEndMinutes(entry){
+    return dateTimeToMinutes(entry.finalWakeDate,entry.finalWake);
+  }
   function findNapTargetHistory(nap){
-    const ns=dateTimeToMinutes(nap.startDate,nap.startTime); if(ns===null)return null;
-    const entries=getHistory(); let best=null,bestEnd=-Infinity;
-    for(const e of entries){const end=historyEndMinutes(e); if(end!==null && end<=ns && end>bestEnd){best=e;bestEnd=end}}
+    const ns=napDateTime(nap,'start');
+    if(ns===null)return null;
+    const entries=getHistory();
+    let best=null,bestEnd=-Infinity;
+    for(const e of entries){
+      const end=historyEndMinutes(e);
+      if(end!==null && end<=ns && end>bestEnd){
+        best=e;bestEnd=end;
+      }
+    }
     return best;
   }
   function entryBaseSleepMinutes(entry){
@@ -565,103 +591,74 @@ function driveBindUI(){
     const napSum=getNaps().filter(n=>n.sleepId===entry.id).reduce((s,n)=>s+(napDuration(n)||0),0);
     return Math.max(0,stored-napSum);
   }
-  function napSumForEntry(entryId){return getNaps().filter(n=>n.sleepId===entryId).reduce((s,n)=>s+(napDuration(n)||0),0)}
+  function napSumForEntry(entryId){
+    return getNaps().filter(n=>n.sleepId===entryId).reduce((s,n)=>s+(napDuration(n)||0),0);
+  }
   function syncHistoryNapTotals(){
-    const naps=getNaps(), entries=getHistory().map(e=>({...e}));
+    const naps=getNaps();
+    const entries=getHistory().map(e=>({...e}));
     let changed=false;
     for(const e of entries){
-      const totalNap=napSumForEntryFix(naps,e.id);
+      const totalNap=napSumForEntry(e.id);
       const base=entryBaseSleepMinutes(e);
       const total=base+totalNap;
       const nextDuration=duration(total);
-      if(e.sleepDuration!==nextDuration || Number(e.napMinutes||0)!==totalNap || Number(e.baseSleepMinutes||0)!==base){e.sleepDuration=nextDuration;e.napMinutes=totalNap;e.napDuration=duration(totalNap);e.baseSleepMinutes=base;changed=true}
+      if(e.sleepDuration!==nextDuration ||
+         Number(e.napMinutes||0)!==totalNap ||
+         Number(e.baseSleepMinutes||0)!==base){
+        e.sleepDuration=nextDuration;
+        e.napMinutes=totalNap;
+        e.napDuration=duration(totalNap);
+        e.baseSleepMinutes=base;
+        changed=true;
+      }
     }
-    if(changed)localStorage.setItem(HISTORY_KEY,JSON.stringify(entries));
+    if(changed) localStorage.setItem(HISTORY_KEY,JSON.stringify(entries));
     return entries;
   }
-  function napSumForEntryFix(naps,id){return naps.filter(n=>n.sleepId===id).reduce((s,n)=>s+(napDuration(n)||0),0)}
   function currentLatestCycle(){
     const entries=getHistory();
     if(!entries.length)return null;
     return entries.slice().sort((a,b)=>{
-      const ae=historyEndMinutes(a)??-Infinity,be=historyEndMinutes(b)??-Infinity;return be-ae;
+      const ae=historyEndMinutes(a)??-Infinity;
+      const be=historyEndMinutes(b)??-Infinity;
+      return be-ae;
     })[0];
   }
-  function napBelongsToDisplayedCycle(n){
-    const current=currentLatestCycle(); return !!current && n.sleepId===current.id;
-  }
-  function setNapStatus(text,type='ok'){const el=$('napStatus');if(!el)return;el.textContent=text;el.className='status nap-status '+(type==='error'?'drive-error':'');el.classList.remove('hidden')}
-  let napDraftState=null;
-  function renderNaps(){
-    const all=getNaps();
-    const total=all.reduce((s,n)=>s+(napDuration(n)||0),0);
-    const count=$('napSavedCount'); if(count)count.textContent=`${all.length} 次午睡`;
-    const totalEl=$('napTotal'); if(totalEl)totalEl.textContent=duration(total);
-    if($('napList')) $('napList').replaceChildren();
+  function setNapStatus(text,type='ok'){
+    const el=$('napStatus');
+    if(!el)return;
+    el.textContent=text;
+    el.className='status nap-status '+(type==='error'?'drive-error':'');
+    el.classList.remove('hidden');
   }
 
-  function openNapEditor(item,n){
-    if(item.querySelector('.nap-editor'))return;
-    const existing=document.querySelector('.nap-item .nap-editor');
-    if(existing){
-      renderNaps();
-      item=document.querySelector(`.nap-item[data-id="${CSS.escape(n.id)}"]`);
-      if(!item)return;
-    }
-    const state={startDate:n.startDate||'',endDate:n.endDate||''};
-    const editor=document.createElement('div'); editor.className='nap-editor';
-    editor.innerHTML=`<div class="nap-grid"><label>开始时间<input type="time" class="nap-st" value="${n.startTime||''}"></label><label>结束时间<input type="time" class="nap-et" value="${n.endTime||''}"></label></div><div class="nap-duration">午睡时长：${duration(napDuration(n)||0)}</div><div class="nap-belongs">日期会根据实际输入时间自动处理</div><div class="nap-actions"><button type="button" class="primary nap-save-edit">保存修改</button><button type="button" class="secondary nap-cancel-edit">取消</button></div>`;
-    item.appendChild(editor);
-    const validate=()=>{
-      applyNapAutoDates(item,state);
-      const draft={startDate:state.startDate,startTime:editor.querySelector('.nap-st').value,endDate:state.endDate,endTime:editor.querySelector('.nap-et').value};
-      const m=napDuration(draft);
-      editor.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;
-      return m!==null;
-    };
-    editor.querySelectorAll('input').forEach(el=>el.addEventListener('input',validate));
-    editor.querySelector('.nap-cancel-edit').addEventListener('click',()=>renderNaps());
-    editor.querySelector('.nap-save-edit').addEventListener('click',()=>{
-      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始和结束时间','error');return}
-      const updated={...n,startDate:state.startDate,startTime:editor.querySelector('.nap-st').value,endDate:state.endDate,endTime:editor.querySelector('.nap-et').value};
-      const m=napDuration(updated); if(m===null){setNapStatus('无法保存：请填写有效的午睡时间','error');return}
-      const target=findNapTargetHistory(updated); if(!target){setNapStatus('无法归属：请先保存主睡眠记录，再保存这次午睡','error');return}
-      updated.sleepId=target.id;
-      saveNaps(getNaps().map(x=>x.id===n.id?updated:x));
-      syncHistoryNapTotals(); renderHistory(); renderNaps(); updateDashboard();
-      setNapStatus(`午睡已保存，已计入 ${formatMonthDay(target.date)} 的主睡眠`,'ok');
-    });
-  }
-  function createNapDraft(){
-    const item=document.createElement('div'), draftId=`draft-${Date.now()}-${Math.random()}`, state={startDate:'',endDate:''};
-    item.className='nap-item nap-draft'; item.dataset.id=draftId;
-    item.innerHTML=`<div class="nap-head"><strong>新午睡</strong><button type="button" class="danger compact nap-cancel">取消</button></div><div class="nap-grid"><label>开始时间<input type="time" class="nap-st"></label><label>结束时间<input type="time" class="nap-et"></label></div><div class="nap-duration">请填写完整时间后保存</div><div class="nap-belongs">日期会根据你实际输入时间自动记录</div><div class="nap-actions"><button type="button" class="primary nap-save-new">保存午睡</button></div>`;
-    $('napList').prepend(item); napDraftState=state;
-    const validate=()=>{applyNapAutoDates(item,state);const n={startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};const m=napDuration(n);item.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;return m!==null};
-    item.querySelectorAll('input').forEach(el=>el.addEventListener('input',validate));
-    item.querySelector('.nap-cancel').addEventListener('click',()=>{napDraftState=null;item.remove()});
-    item.querySelector('.nap-save-new').addEventListener('click',()=>{
-      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始和结束时间','error');return}
-      const n={id:`${Date.now()}-${Math.random()}`,startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};
-      const m=napDuration(n); if(m===null){setNapStatus('无法保存：请填写有效的午睡时间','error');return}
-      const target=findNapTargetHistory(n); if(!target){setNapStatus('无法保存：请先保存主睡眠记录，系统才能确定这次午睡归属','error');return}
-      n.sleepId=target.id; saveNaps([...getNaps(),n]); syncHistoryNapTotals(); napDraftState=null; item.remove(); renderHistory(); renderNaps(); updateDashboard(); setNapStatus(`午睡已保存，${duration(m)} 已计入 ${formatMonthDay(target.date)} 的睡眠`,'ok');
-    });
-  }
   let napModalMode='new', napModalId=null;
+  let napModalStartDate='', napModalEndDate='';
 
-  function openNapModal(mode='new', napId=null){
-    napModalMode=mode; napModalId=napId;
-    const modal=$('napModal'); if(!modal)return;
-    const title=$('napModalTitle'), sub=$('napModalSub'), st=$('napModalStart'), et=$('napModalEnd');
+  function openNapModal(mode='new',napId=null){
+    napModalMode=mode;
+    napModalId=napId;
+    const modal=$('napModal');
+    if(!modal)return;
+    const title=$('napModalTitle'), sub=$('napModalSub');
+    const st=$('napModalStart'), et=$('napModalEnd');
+
     if(mode==='edit' && napId){
       const n=getNaps().find(x=>x.id===napId);
       if(!n){setNapStatus('找不到这次午睡记录','error');return;}
-      title.textContent='编辑午睡'; sub.textContent='修改这次午睡的开始和结束时间';
-      st.value=n.startTime||''; et.value=n.endTime||'';
+      title.textContent='编辑午睡';
+      sub.textContent='修改这次午睡的开始和结束时间';
+      st.value=n.startTime||'';
+      et.value=n.endTime||'';
+      napModalStartDate=n.startDate||todayDate();
+      napModalEndDate=n.endDate||napModalStartDate;
     }else{
-      title.textContent='添加午睡'; sub.textContent='填写午睡开始和结束时间';
+      title.textContent='添加午睡';
+      sub.textContent='填写午睡开始和结束时间';
       st.value=''; et.value='';
+      napModalStartDate=todayDate();
+      napModalEndDate=napModalStartDate;
     }
     updateNapModalDuration();
     modal.classList.remove('hidden');
@@ -669,68 +666,97 @@ function driveBindUI(){
   }
 
   function closeNapModal(){
-    const modal=$('napModal'); if(modal)modal.classList.add('hidden');
-    napModalId=null; napModalMode='new';
+    const modal=$('napModal');
+    if(modal)modal.classList.add('hidden');
+    napModalId=null;
+    napModalMode='new';
+    napModalStartDate='';
+    napModalEndDate='';
   }
 
   function draftNapFromModal(){
-    const nowDate=todayDate();
-    const st=$('napModalStart').value, et=$('napModalEnd').value;
-    const n={startDate:nowDate,startTime:st,endDate:nowDate,endTime:et};
-    if(st && et){
-      const sm=timeToMinutes(st), em=timeToMinutes(et);
-      if(sm!==null && em!==null && em<=sm)n.endDate=shiftDate(n.startDate,1);
-    }
-    return n;
+    const st=$('napModalStart').value;
+    const et=$('napModalEnd').value;
+    let startDate=napModalStartDate||todayDate();
+    let endDate=napModalEndDate||startDate;
+    const sm=timeToMinutes(st), em=timeToMinutes(et);
+    if(sm!==null&&em!==null) endDate=em<=sm?shiftDate(startDate,1):startDate;
+    return {startDate,startTime:st,endDate,endTime:et};
   }
 
   function updateNapModalDuration(){
-    const box=$('napModalDuration'); if(!box)return;
-    const n=draftNapFromModal(), m=napDuration(n);
+    const box=$('napModalDuration');
+    if(!box)return;
+    const m=napDuration(draftNapFromModal());
     box.textContent=m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;
     return m;
   }
 
+  function refreshCurrentTimelineForEntry(entry){
+    if(
+      entry &&
+      $('sleepStartDate').value===entry.sleepStartDate &&
+      $('sleepStart').value===entry.sleepStart &&
+      $('finalWakeDate').value===entry.finalWakeDate &&
+      $('finalWake').value===entry.finalWake
+    ){
+      calculateActual();
+    }
+  }
+
   function saveNapFromModal(){
     const n=draftNapFromModal(), m=napDuration(n);
-    if(m===null){setNapStatus('无法保存：请填写完整且有效的午睡时间','error');return;}
-    if(n.startDate===n.endDate){
-      const st=timeToMinutes(n.startTime), et=timeToMinutes(n.endTime);
-      if(st!==null && et!==null && et===st){setNapStatus('无法保存：午睡不能为0分钟','error');return;}
+    if(m===null){
+      setNapStatus('无法保存：请填写完整且有效的午睡时间','error');
+      return;
     }
+
     if(napModalMode==='edit' && napModalId){
       const old=getNaps().find(x=>x.id===napModalId);
       if(!old){setNapStatus('找不到需要修改的午睡记录','error');return;}
-      n.id=old.id;
       const target=findNapTargetHistory(n);
-      if(!target){setNapStatus('无法归属：请先保存主睡眠记录，或检查午睡日期是否应归入该记录','error');return;}
+      if(!target){setNapStatus('无法归属：请检查午睡时间是否发生在某条已保存主睡眠结束之后','error');return;}
+      n.id=old.id;
       n.sleepId=target.id;
       saveNaps(getNaps().map(x=>x.id===old.id?n:x));
       syncHistoryNapTotals();
       renderHistory(); renderNaps(); updateDashboard();
       setNapStatus(`午睡已修改，已计入 ${formatMonthDay(target.date)} 的睡眠`,'ok');
-    }else{
-      const target=findNapTargetHistory(n);
-      if(!target){setNapStatus('无法保存：请先保存主睡眠记录，系统才能把午睡归入历史记录','error');return;}
-      n.id=`${Date.now()}-${Math.random()}`;
-      n.sleepId=target.id;
-      saveNaps([...getNaps(),n]);
-      syncHistoryNapTotals();
-      renderHistory(); renderNaps(); updateDashboard();
-      setNapStatus(`午睡已保存，${duration(m)} 已计入 ${formatMonthDay(target.date)} 的睡眠`,'ok');
+      refreshCurrentTimelineForEntry(target);
+      closeNapModal();
+      return;
     }
+
+    const target=findNapTargetHistory(n);
+    if(!target){
+      setNapStatus('无法保存：请先保存主睡眠记录，系统才能把午睡归入对应历史记录','error');
+      return;
+    }
+    n.id=`${Date.now()}-${Math.random()}`;
+    n.sleepId=target.id;
+    saveNaps([...getNaps(),n]);
+    syncHistoryNapTotals();
+    renderHistory(); renderNaps(); updateDashboard();
+    setNapStatus(`午睡已保存，${duration(m)} 已计入 ${formatMonthDay(target.date)} 的睡眠`,'ok');
+    refreshCurrentTimelineForEntry(target);
     closeNapModal();
   }
 
   function renderHistoryNaps(entry){
-    const naps=getNaps().filter(n=>n.sleepId===entry.id).sort((a,b)=>(napDateTime(a)||0)-(napDateTime(b)||0));
+    const naps=getNaps()
+      .filter(n=>n.sleepId===entry.id && napDuration(n)!==null)
+      .sort((a,b)=>(napDateTime(a,'start')||0)-(napDateTime(b,'start')||0));
     if(!naps.length)return '';
+    const total=naps.reduce((s,n)=>s+(napDuration(n)||0),0);
     return `<div class="history-nap-wrap">
-      <div class="history-nap-head"><span>☀️ 午睡 ${naps.length} 次 · ${duration(naps.reduce((s,n)=>s+(napDuration(n)||0),0))}</span></div>
+      <div class="history-nap-head"><span>☀️ 午睡 ${naps.length} 次 · ${duration(total)}</span></div>
       ${naps.map(n=>`<div class="history-nap-row" data-nap-row="${n.id}">
         <div class="history-nap-time">${n.startTime||'--:--'} → ${n.endTime||'--:--'}</div>
         <div class="history-nap-duration">${duration(napDuration(n)||0)}</div>
-        <div class="history-nap-actions"><button type="button" class="compact nap-history-edit" data-nap-id="${n.id}">编辑</button><button type="button" class="danger compact nap-history-delete" data-nap-id="${n.id}">删除</button></div>
+        <div class="history-nap-actions">
+          <button type="button" class="compact nap-history-edit" data-nap-id="${n.id}">编辑</button>
+          <button type="button" class="danger compact nap-history-delete" data-nap-id="${n.id}">删除</button>
+        </div>
       </div>`).join('')}
     </div>`;
   }
@@ -820,7 +846,7 @@ ${balanceText}。
 长期目标 ${duration(target)}。
 下一次目标睡眠时间调整为 ${duration(next)}。`);} renderHistory(); renderNaps(); }
   function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function exportData(){const payload={app:'sleep-calculator',version:'V10.5',exportedAt:new Date().toISOString(),current:null,history:getHistory(),naps:getNaps()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
+  function exportData(){const payload={app:'sleep-calculator',version:'V10.6',exportedAt:new Date().toISOString(),current:null,history:getHistory(),naps:getNaps()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
   function normalizeImportedHistory(raw){if(!Array.isArray(raw))throw new Error('备份中的历史记录格式不正确');return raw.filter(x=>x&&typeof x==='object').map(x=>({id:String(x.id||`${Date.now()}-${Math.random()}`),date:String(x.date||''),sleepStart:String(x.sleepStart||''),sleepStartDate:String(x.sleepStartDate||''),finalWake:String(x.finalWake||''),finalWakeDate:String(x.finalWakeDate||''),sleepDuration:String(x.sleepDuration||''),awakeDuration:String(x.awakeDuration||'0分钟'),wakeCount:Number.isFinite(Number(x.wakeCount))?Number(x.wakeCount):0,baseSleepMinutes:Number.isFinite(Number(x.baseSleepMinutes))?Number(x.baseSleepMinutes):null,napMinutes:Number.isFinite(Number(x.napMinutes))?Number(x.napMinutes):0,napDuration:String(x.napDuration||'0分钟')})).filter(x=>x.date&&x.sleepStart&&x.finalWake&&parseDuration(x.sleepDuration)!==null);}
   function importDataFromText(text){let data;try{data=JSON.parse(text);}catch{throw new Error('无法读取备份：JSON 文件格式错误。');}const importedHistory=normalizeImportedHistory(data.history); const importedNaps=Array.isArray(data.naps)?data.naps:[];let importedCurrent=null;if(data.current!==null&&data.current!==undefined){if(typeof data.current!=='object')throw new Error('备份中的当前记录格式不正确');importedCurrent=data.current;}if(!confirm(`准备导入 ${importedHistory.length} 条历史记录。\n\n导入后会覆盖当前设备上的历史记录和当前记录。\n\n确定继续吗？`))return;localStorage.setItem(HISTORY_KEY,JSON.stringify(importedHistory)); localStorage.setItem(NAP_KEY,JSON.stringify(importedNaps)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); if(importedCurrent)localStorage.setItem(CURRENT_KEY,JSON.stringify(importedCurrent));else localStorage.removeItem(CURRENT_KEY);location.reload();}
   function exportCsv(){const entries=getHistory();if(!entries.length){alert('目前没有可导出的历史记录。');return;}const header=['日期','首次入睡日期','首次入睡','最终起床日期','最终起床','实际睡眠','清醒/起夜','起夜次数','午睡'];const rows=entries.map(x=>[x.date,x.sleepStartDate||x.date.replaceAll('/','-'),x.sleepStart,x.finalWakeDate||'',x.finalWake,x.sleepDuration,x.awakeDuration,x.wakeCount,x.napDuration||'0分钟']);const csv='\ufeff'+[header,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');downloadFile(`sleep-history-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8');setStatus('📊 历史记录 CSV 已导出');}
@@ -920,11 +946,11 @@ ${balanceText}。
 if('serviceWorker' in navigator){
   window.addEventListener('load',async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=10.5',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=10.6',{updateViaCache:'none'});
       await reg.update();
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.5')){
-          sessionStorage.setItem('sleep-sw-reloaded-v10.5','1');
+        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.6')){
+          sessionStorage.setItem('sleep-sw-reloaded-v10.6','1');
           location.reload();
         }
       });
