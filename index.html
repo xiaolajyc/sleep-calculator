@@ -13,6 +13,7 @@
 .nap-item{border:1px solid #e2ebf6;background:#f8fbff;border-radius:14px;padding:10px 12px;margin:8px 0}.nap-summary{display:flex;align-items:center;gap:10px;min-height:40px}.nap-summary-main{flex:1;min-width:0}.nap-summary-time{display:flex;align-items:center;gap:7px;font-weight:800;color:#24477d;font-size:14px}.nap-summary-time .sun{font-size:17px}.nap-summary-meta{margin-top:2px;color:#7184a0;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.nap-summary-duration{font-weight:800;color:#2459b8;font-size:13px;white-space:nowrap}.nap-summary-actions{display:flex;gap:6px;flex:0 0 auto}.nap-summary-actions button{margin:0;padding:6px 9px;font-size:11px}.nap-editor{margin-top:10px;padding-top:10px;border-top:1px dashed #d5e3f4}.nap-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}.nap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.nap-grid label{margin:0}.nap-duration{margin-top:8px;color:#526987;font-size:12px}.nap-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.nap-actions button{margin:0}.nap-total{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:12px;padding:10px 12px;border-radius:12px;background:#f1f7ff;color:#49678f;font-size:13px}.nap-total strong{color:#2459b8;font-size:15px}.nap-belongs{margin-top:4px;color:#7184a0;font-size:12px}.nap-draft{border-color:#9fc3f6;background:#f5f9ff}.nap-status{margin-top:8px}.nap-empty{padding:10px;text-align:center;color:#7184a0;background:#f7faff;border-radius:11px}.nap-count{font-size:11px;color:#7184a0;margin-left:5px}
 html,body{touch-action:pan-x pan-y;-ms-touch-action:pan-x pan-y}input,select,textarea,button{touch-action:manipulation}.no-zoom{touch-action:pan-x pan-y}
 @media(max-width:520px){.nap-grid{grid-template-columns:1fr}.nap-actions{grid-template-columns:1fr}}
+.segment.gap{background:transparent !important}
 </style>
 <style id="v8-3-google-drive-style">
 .drive-sync-card{margin-top:14px}
@@ -60,7 +61,7 @@ body{padding-bottom:82px}
 <div><h2 class="section-title">最近一次睡眠</h2><p class="section-sub">主睡眠与午睡合并后的结果</p></div>
 </div>
 <div id="todaySummary"></div>
-</section></section><section class="tab-page" data-tab="record"><div class="tab-header"><h2 class="tab-title">记录睡眠</h2><p class="tab-subtitle">输入和管理睡眠、起夜、午睡</p></div><section class="card"><div class="section-head"><div class="step">1</div><div><h2 class="section-title">睡眠设置</h2><p class="section-sub">设置入睡时间和本次目标睡眠时长</p></div></div><div class="control-panel"><div class="row"><div class="field"><label>首次入睡时间</label><div class="date-time"><input aria-label="首次入睡日期" id="sleepStartDate" type="date"/><input aria-label="首次入睡时间" id="sleepStart" type="time"/></div></div><div class="field"><label>目标睡眠时间</label><div class="duration-row"><input aria-label="目标睡眠小时" id="targetSleepHours" max="24" min="0" step="1" type="number" value="8"/><span class="unit">小时</span><input aria-label="目标睡眠分钟" id="targetSleepMinutes" max="59" min="0" step="1" type="number" value="0"/><span class="unit">分钟</span></div></div></div><button class="compact" id="nowButton" type="button">🕐 使用当前时间</button></div><p class="small">下一次目标会根据全部历史记录累计调整：之前多睡的时间会抵扣，之前少睡的时间会补回来。</p></section><section class="card"><div class="section-head"><div class="step">2</div><div><h2 class="section-title">中间起夜记录</h2><p class="section-sub">记录每次醒来和再次入睡的时间</p></div></div><div id="wakeList"></div><button class="add-wake" id="addWake" type="button">＋ 添加一次起夜</button><p class="small">可添加多次，系统会自动从总睡眠时间中扣除清醒时间。</p></section><section class="card"><div class="section-head"><div class="step">3</div><div><h2 class="section-title">计算建议起床时间</h2><p class="section-sub">根据入睡时间、目标睡眠和起夜时间计算</p></div></div><button class="primary" id="calculateWake" type="button">计算起床时间</button><div class="result hidden" id="wakeResult"><div>为了睡满目标时间，你应该在</div><div class="big" id="recommendedWake"></div><div class="detail" id="wakeDetail"></div></div></section><section class="card"><div class="section-head"><div class="step">4</div><div><h2 class="section-title">计算实际睡眠</h2><p class="section-sub">输入最终起床时间，日期会根据你输入时间的实际日期自动记录</p></div></div><label>最终起床时间</label><div class="date-time"><input aria-label="最终起床日期" id="finalWakeDate" type="date"/><input aria-label="最终起床时间" id="finalWake" type="time"/></div><button class="primary" id="calculateActual" type="button">计算实际睡眠时长</button><div class="result hidden" id="sleepResult"><div>你的实际睡眠时间</div><div class="big" id="actualSleep"></div><div class="detail" id="sleepDetail"></div></div><div class="two-buttons"><button class="primary" id="saveCompleted" type="button">💾 保存本次记录</button><button class="secondary" id="clearCurrent" type="button">↻ 清空当前记录</button></div><div class="status" id="saveStatus" aria-live="polite">当前记录尚未保存</div></section><section class="card" id="napCard"><div class="section-head"><div class="step">☀️</div><div><h2 class="section-title">午睡</h2><p class="section-sub">主睡眠保存后也可以单独添加，午睡会归入之前最近完成的主睡眠周期</p></div></div><div id="napList"></div><button class="add-wake" id="addNap" type="button">＋ 添加午睡</button><div class="status hidden" id="napStatus"></div><div class="nap-total"><span>当前统计中的午睡</span><strong id="napTotal">0分钟</strong></div><p class="small">保存午睡后，会立即更新对应主睡眠的实际睡眠时长和累计睡眠盈亏。</p></section><section class="card"><div class="section-head"><div class="step">☾</div><div><h2 class="section-title">睡眠时间轴</h2><p class="section-sub">直观展示睡眠与清醒的时间分布</p></div></div><div class="empty" id="timelineEmpty">填写入睡时间和最终起床时间后，这里将显示完整时间轴。</div><div class="hidden" id="timelineContent"><div class="labels"><span id="timelineStart"></span><span>睡眠 / 清醒</span><span id="timelineEnd"></span></div><div class="timeline" id="timelineBar"></div><div class="timeline-details" id="timelineDetails"></div><div class="legend"><span><i class="s"></i>主睡眠</span><span><i class="n"></i>午睡</span><span><i class="a"></i>清醒／起夜</span></div><div class="stats"><div class="stat">实际睡眠<strong id="timelineSleep">--</strong></div><div class="stat">清醒时间<strong id="timelineAwake">--</strong></div><div class="stat">总经过时间<strong id="timelineTotal">--</strong></div></div></div></section></section><section class="tab-page" data-tab="history"><div class="tab-header"><h2 class="tab-title">历史记录</h2><p class="tab-subtitle">查看和管理所有已保存记录</p></div><section class="card"><div class="history-head"><div class="section-head" style="margin:0"><div class="step">▥</div><div><h2 class="section-title">已完成的睡眠记录</h2><p class="section-sub">长期目标会根据这些记录累计调整</p></div></div><span class="history-count" id="historyCount"></span></div><div class="history-summary hidden" id="historySummary"></div><div id="historyList"></div></section></section><section class="tab-page" data-tab="stats"><div class="tab-header"><h2 class="tab-title">睡眠统计</h2><p class="tab-subtitle">查看睡眠趋势、起夜和午睡数据</p></div><section class="card">
+</section></section><section class="tab-page" data-tab="record"><div class="tab-header"><h2 class="tab-title">记录睡眠</h2><p class="tab-subtitle">输入和管理睡眠、起夜、午睡</p></div><section class="card"><div class="section-head"><div class="step">1</div><div><h2 class="section-title">睡眠设置</h2><p class="section-sub">设置入睡时间和本次目标睡眠时长</p></div></div><div class="control-panel"><div class="row"><div class="field"><label>首次入睡时间</label><div class="date-time"><input aria-label="首次入睡日期" id="sleepStartDate" type="date"/><input aria-label="首次入睡时间" id="sleepStart" type="time"/></div></div><div class="field"><label>目标睡眠时间</label><div class="duration-row"><input aria-label="目标睡眠小时" id="targetSleepHours" max="24" min="0" step="1" type="number" value="8"/><span class="unit">小时</span><input aria-label="目标睡眠分钟" id="targetSleepMinutes" max="59" min="0" step="1" type="number" value="0"/><span class="unit">分钟</span></div></div></div><button class="compact" id="nowButton" type="button">🕐 使用当前时间</button></div><p class="small">下一次目标会根据全部历史记录累计调整：之前多睡的时间会抵扣，之前少睡的时间会补回来。</p></section><section class="card"><div class="section-head"><div class="step">2</div><div><h2 class="section-title">中间起夜记录</h2><p class="section-sub">记录每次醒来和再次入睡的时间</p></div></div><div id="wakeList"></div><button class="add-wake" id="addWake" type="button">＋ 添加一次起夜</button><p class="small">可添加多次，系统会自动从总睡眠时间中扣除清醒时间。</p></section><section class="card"><div class="section-head"><div class="step">3</div><div><h2 class="section-title">计算建议起床时间</h2><p class="section-sub">根据入睡时间、目标睡眠和起夜时间计算</p></div></div><button class="primary" id="calculateWake" type="button">计算起床时间</button><div class="result hidden" id="wakeResult"><div>为了睡满目标时间，你应该在</div><div class="big" id="recommendedWake"></div><div class="detail" id="wakeDetail"></div></div></section><section class="card"><div class="section-head"><div class="step">4</div><div><h2 class="section-title">计算实际睡眠</h2><p class="section-sub">输入最终起床时间，日期会根据你输入时间的实际日期自动记录</p></div></div><label>最终起床时间</label><div class="date-time"><input aria-label="最终起床日期" id="finalWakeDate" type="date"/><input aria-label="最终起床时间" id="finalWake" type="time"/></div><button class="primary" id="calculateActual" type="button">计算实际睡眠时长</button><div class="result hidden" id="sleepResult"><div>你的实际睡眠时间</div><div class="big" id="actualSleep"></div><div class="detail" id="sleepDetail"></div></div><div class="two-buttons"><button class="primary" id="saveCompleted" type="button">💾 保存本次记录</button><button class="secondary" id="clearCurrent" type="button">↻ 清空当前记录</button></div><div class="status" id="saveStatus" aria-live="polite">当前记录尚未保存</div></section><section class="card" id="napCard"><div class="section-head"><div class="step">☀️</div><div><h2 class="section-title">午睡</h2><p class="section-sub">午睡独立保存；统计时再按日期自动归入对应主睡眠</p></div></div><div id="napList"></div><button class="add-wake" id="addNap" type="button">＋ 添加午睡</button><div class="status hidden" id="napStatus"></div><div class="nap-total"><span>已记录午睡总计</span><strong id="napTotal">0分钟</strong></div><p class="small">保存后午睡独立保存在本机；历史、统计和时间轴会按真实日期时间自动计算。</p></section><section class="card"><div class="section-head"><div class="step">☾</div><div><h2 class="section-title">睡眠时间轴</h2><p class="section-sub">直观展示睡眠与清醒的时间分布</p></div></div><div class="empty" id="timelineEmpty">填写入睡时间和最终起床时间后，这里将显示完整时间轴。</div><div class="hidden" id="timelineContent"><div class="labels"><span id="timelineStart"></span><span>睡眠 / 清醒</span><span id="timelineEnd"></span></div><div class="timeline" id="timelineBar"></div><div class="timeline-details" id="timelineDetails"></div><div class="legend"><span><i class="s"></i>主睡眠</span><span><i class="n"></i>午睡</span><span><i class="a"></i>清醒／起夜</span></div><div class="stats"><div class="stat">实际睡眠<strong id="timelineSleep">--</strong></div><div class="stat">清醒时间<strong id="timelineAwake">--</strong></div><div class="stat">总经过时间<strong id="timelineTotal">--</strong></div></div></div></section></section><section class="tab-page" data-tab="history"><div class="tab-header"><h2 class="tab-title">历史记录</h2><p class="tab-subtitle">查看和管理所有已保存记录</p></div><section class="card"><div class="history-head"><div class="section-head" style="margin:0"><div class="step">▥</div><div><h2 class="section-title">已完成的睡眠记录</h2><p class="section-sub">长期目标会根据这些记录累计调整</p></div></div><span class="history-count" id="historyCount"></span></div><div class="history-summary hidden" id="historySummary"></div><div id="historyList"></div></section></section><section class="tab-page" data-tab="stats"><div class="tab-header"><h2 class="tab-title">睡眠统计</h2><p class="tab-subtitle">查看睡眠趋势、起夜和午睡数据</p></div><section class="card">
 <div class="section-head"><div class="step">▥</div><div>
 <h2 class="section-title">睡眠趋势</h2><p class="section-sub">实际睡眠 vs 长期目标</p>
 </div></div>
@@ -113,9 +114,9 @@ body{padding-bottom:82px}
 </div>
 <label class="drive-auto"><input id="driveAutoSync" type="checkbox"/><span>数据修改后自动同步</span></label>
 <div class="drive-note" id="driveNote">数据仍同时保存在本机浏览器。首次连接会弹出 Google 授权窗口。</div>
-</section><section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V10.5</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section></section><nav aria-label="主导航" class="bottom-nav">
+</section><section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V10.7</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section></section><nav aria-label="主导航" class="bottom-nav">
 <button class="nav-item active" data-tab-target="today" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.2 15.1A8.2 8.2 0 0 1 8.9 3.8 8.2 8.2 0 1 0 20.2 15.1Z"/><path d="M17.2 4.2v2.2M18.3 5.3h-2.2"/></svg></span><small>今日</small></button>
-<button class="nav-item" data-tab-target="record" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.5h17v7.2h-17z"/><path d="M5.5 11.5V8.7a2 2 0 0 1 2-2h3.2a2 2 0 0 1 2 2v2.8"/><path d="M14 8.2h5.5"/><path d="M16.75 5.45v5.5"/></svg></span><small>记录</small></button>
+<button class="nav-item" data-tab-target="record" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.5h17v7.2h-17z"/><path d="M5.5 11.5V10.7a2 2 0 0 1 2-2h3.2a2 2 0 0 1 2 2v2.8"/><path d="M14 8.2h5.5"/><path d="M16.75 5.45v5.5"/></svg></span><small>记录</small></button>
 <button class="nav-item" data-tab-target="history" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.7v4.8l3.1 1.8"/><path d="M4.5 5.7 3.2 4.4"/></svg></span><small>历史</small></button>
 <button class="nav-item" data-tab-target="stats" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V10"/><path d="M12 19V5"/><path d="M19 19v-7"/><path d="M3.8 19.5h16.4"/></svg></span><small>统计</small></button>
 <button class="nav-item" data-tab-target="settings" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg></span><small>设置</small></button>
@@ -204,7 +205,7 @@ function drivePayload(){
   try{current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null')}catch{}
   return {
     schema:'sleep-calculator-sync-v1',
-    appVersion:'V10.5',
+    appVersion:'V10.7',
     updatedAt:new Date().toISOString(),
     current,
     history:window.sleepAppStore.getHistory(),
@@ -452,195 +453,454 @@ function driveBindUI(){
     }
     return {start,end,periods,awake,sleep:end-start-awake,total:end-start};
   }
-  function renderTimeline(data, napList=[]) {
+  function renderTimeline(data,napList=[]){
     const bar=$('timelineBar'), details=$('timelineDetails');
     bar.replaceChildren(); details.replaceChildren();
-    const base=[];
+
+    const segments=[];
     const periods=Array.isArray(data.periods)?data.periods:[];
-    base.push({kind:'sleep',from:data.start,to:periods[0]?.wake??data.end});
+
+    segments.push({kind:'sleep',from:data.start,to:periods[0]?.wake??data.end});
     periods.forEach((p,i)=>{
-      base.push({kind:'awake',from:p.wake,to:p.again});
-      base.push({kind:'sleep',from:p.again,to:periods[i+1]?.wake??data.end});
+      segments.push({kind:'awake',from:p.wake,to:p.again});
+      segments.push({kind:'sleep',from:p.again,to:periods[i+1]?.wake??data.end});
     });
+
     const naps=(Array.isArray(napList)?napList:[]).map(n=>({
-      kind:'nap',
-      from:dateTimeToMinutes(n.startDate,n.startTime),
-      to:dateTimeToMinutes(n.endDate,n.endTime)
-    })).filter(x=>x.from!==null&&x.to!==null&&x.to>x.from);
+      kind:'nap',from:napDateTime(n),to:napEndDateTime(n)
+    })).filter(s=>s.from!==null&&s.to!==null&&s.to>s.from);
+
     const timelineEnd=Math.max(data.end,...naps.map(n=>n.to));
-    // 午睡结束后如果主睡眠已经结束，不把中间整段时间误算成“起夜”。
-    // 这里仅把它作为时间轴上的非睡眠空档显示；真正的起夜仍由 data.periods 决定。
-    const all=[...base,...naps].filter(s=>s.to>s.from).sort((a,b)=>a.from-b.from||({awake:0,sleep:1,nap:2}[a.kind]-({awake:0,sleep:1,nap:2}[b.kind])));
+    const ordered=[...segments,...naps].filter(s=>s.to>s.from).sort(
+      (a,b)=>a.from-b.from||({awake:0,sleep:1,nap:2}[a.kind]-({awake:0,sleep:1,nap:2}[b.kind]))
+    );
+
+    const visual=[];
+    let cursor=data.start;
+    for(const s of ordered){
+      if(s.from>cursor)visual.push({kind:'gap',from:cursor,to:s.from});
+      visual.push(s);
+      cursor=Math.max(cursor,s.to);
+    }
+    if(cursor<timelineEnd)visual.push({kind:'gap',from:cursor,to:timelineEnd});
+
     const total=Math.max(0,timelineEnd-data.start);
-    let sleepNo=0, napNo=0;
-    all.forEach(s=>{
+    let sleepNo=0,napNo=0;
+
+    visual.forEach(s=>{
       const mins=s.to-s.from;
+      if(mins<=0)return;
+
       const el=document.createElement('div');
       el.className=`segment ${s.kind}${s.kind==='nap'?' nap-segment':''}`;
       el.style.flex=`${mins} 0 0`;
-      const labelText=s.kind==='nap'?`午睡：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(mins)}）`:`${s.kind==='sleep'?'睡眠':'清醒'}：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(mins)}）`;
-      el.title=labelText;
+
       if(s.kind==='sleep'){
         sleepNo++;
-        const label=document.createElement('span'); label.className='segment-label'; label.textContent=duration(mins); el.append(label);
-        const row=document.createElement('div'); row.className='timeline-detail';
+        el.title=`睡眠：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(mins)}）`;
+        const label=document.createElement('span');
+        label.className='segment-label'; label.textContent=duration(mins); el.append(label);
+
+        const row=document.createElement('div');
+        row.className='timeline-detail';
         row.innerHTML=`<span class="dot"></span><span>第${sleepNo}段主睡眠：<strong>${dateTimeText(s.from)} → ${dateTimeText(s.to)}</strong> · ${duration(mins)}</span>`;
         details.append(row);
-      } else if(s.kind==='nap'){
+      }else if(s.kind==='awake'){
+        el.title=`清醒 / 起夜：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(mins)}）`;
+      }else if(s.kind==='nap'){
         napNo++;
-        const label=document.createElement('span'); label.className='segment-label'; label.textContent=duration(mins); el.append(label);
-        const row=document.createElement('div'); row.className='timeline-detail';
+        el.title=`午睡：${dateTimeText(s.from)} → ${dateTimeText(s.to)}（${duration(mins)}）`;
+        const label=document.createElement('span');
+        label.className='segment-label'; label.textContent=duration(mins); el.append(label);
+
+        const row=document.createElement('div');
+        row.className='timeline-detail';
         row.innerHTML=`<span class="dot" style="background:#8a73d6"></span><span>第${napNo}次午睡：<strong>${dateTimeText(s.from)} → ${dateTimeText(s.to)}</strong> · ${duration(mins)}</span>`;
         details.append(row);
+      }else{
+        el.title=`空档：${dateTimeText(s.from)} → ${dateTimeText(s.to)}`;
       }
       bar.append(el);
     });
+
     const napTotal=naps.reduce((sum,n)=>sum+(n.to-n.from),0);
     $('timelineStart').textContent=clock(data.start);
     $('timelineEnd').textContent=clock(timelineEnd);
     $('timelineSleep').textContent=duration(data.sleep+napTotal);
     $('timelineAwake').textContent=duration(data.awake);
     $('timelineTotal').textContent=duration(total);
-    $('timelineEmpty').classList.add('hidden'); $('timelineContent').classList.remove('hidden');
+    $('timelineEmpty').classList.add('hidden');
+    $('timelineContent').classList.remove('hidden');
   }
   function timelineDataForEntry(entry){
-    const start=dateTimeToMinutes(entry.sleepStartDate||String(entry.date||'').replaceAll('/','-'),entry.sleepStart);
-    const end=dateTimeToMinutes(entry.finalWakeDate||entry.sleepStartDate||String(entry.date||'').replaceAll('/','-'),entry.finalWake);
+    const start=dateTimeToMinutes(
+      entry.sleepStartDate||String(entry.date||'').replaceAll('/','-'),
+      entry.sleepStart
+    );
+    const end=dateTimeToMinutes(
+      entry.finalWakeDate||entry.sleepStartDate||String(entry.date||'').replaceAll('/','-'),
+      entry.finalWake
+    );
     if(start===null||end===null||end<=start)return null;
-    const periods=Array.isArray(entry.wakePeriods)?entry.wakePeriods.map(p=>({wake:dateTimeToMinutes(p.wakeDate||entry.sleepStartDate,p.wake),again:dateTimeToMinutes(p.againDate||p.wakeDate||entry.sleepStartDate,p.again)})).filter(p=>p.wake!==null&&p.again!==null&&p.again>p.wake):[];
+
+    const periods=Array.isArray(entry.wakePeriods)
+      ? entry.wakePeriods.map(p=>({
+          wake:dateTimeToMinutes(p.wakeDate||entry.sleepStartDate,p.wake),
+          again:dateTimeToMinutes(p.againDate||p.wakeDate||entry.sleepStartDate,p.again)
+        })).filter(p=>p.wake!==null&&p.again!==null&&p.again>p.wake)
+      : [];
+
     const awake=periods.reduce((s,p)=>s+p.again-p.wake,0);
-    const napList=getNaps().filter(n=>n.sleepId===entry.id);
-    return {start,end,periods,awake,sleep:Math.max(0,end-start-awake),naps:napList};
+    const napList=getNapsForEntry(entry).filter(n=>{
+      const ns=napDateTime(n), ne=napEndDateTime(n);
+      return ns!==null&&ne!==null&&ne>ns&&ns>=start;
+    });
+
+    return {
+      start,end,periods,awake,
+      sleep:Math.max(0,end-start-awake),
+      naps:napList
+    };
   }
   function renderTimelineForEntry(entry){const data=timelineDataForEntry(entry);if(data)renderTimeline(data,data.naps);}
 
   function calculateActual() { try { const data=actualData(); if(data.sleep<0) throw new Error('起夜时间不能超过总经过时间'); $('actualSleep').textContent=duration(data.sleep); $('sleepDetail').textContent=`总经过 ${duration(data.end-data.start)}，其中清醒／起夜 ${duration(data.awake)}。`; $('sleepResult').classList.remove('hidden'); renderTimeline(data); saveCurrent(); return data; } catch(error) { alert(error.message); return null; } }
+
   const NAP_KEY='sleepCalculator.naps.v1';
-  function getNaps(){try{const list=JSON.parse(localStorage.getItem(NAP_KEY)||'[]');return Array.isArray(list)?list:[]}catch{return []}}
-  function saveNaps(list){localStorage.setItem(NAP_KEY,JSON.stringify(list));if(typeof driveMarkLocalChange==='function')driveMarkLocalChange()}
-  function napDateTime(n){return dateTimeToMinutes(n.startDate,n.startTime)}
-  function napDuration(n){const s=napDateTime({date:n.startDate,time:n.startTime}),e=napDateTime({date:n.endDate,time:n.endTime});return s!==null&&e!==null&&e>s?e-s:null}
-  function historyEndMinutes(entry){return dateTimeToMinutes(entry.finalWakeDate,entry.finalWake)}
-  function findNapTargetHistory(nap){
-    const ns=dateTimeToMinutes(nap.startDate,nap.startTime); if(ns===null)return null;
-    const entries=getHistory(); let best=null,bestEnd=-Infinity;
-    for(const e of entries){const end=historyEndMinutes(e); if(end!==null && end<=ns && end>bestEnd){best=e;bestEnd=end}}
+
+  function getNaps(){
+    try{
+      const list=JSON.parse(localStorage.getItem(NAP_KEY)||'[]');
+      return Array.isArray(list)?list:[];
+    }catch{return []}
+  }
+
+  function saveNaps(list){
+    localStorage.setItem(NAP_KEY,JSON.stringify(Array.isArray(list)?list:[]));
+    if(typeof driveMarkLocalChange==='function')driveMarkLocalChange();
+  }
+
+  function napDateTime(n){
+    return dateTimeToMinutes(n.startDate,n.startTime);
+  }
+
+  function napEndDateTime(n){
+    return dateTimeToMinutes(n.endDate,n.endTime);
+  }
+
+  function napDuration(n){
+    const s=napDateTime(n), e=napEndDateTime(n);
+    return s!==null&&e!==null&&e>s?e-s:null;
+  }
+
+  function historyStartMinutes(entry){
+    return dateTimeToMinutes(
+      entry.sleepStartDate||String(entry.date||'').replaceAll('/','-'),
+      entry.sleepStart
+    );
+  }
+
+  function historyEndMinutes(entry){
+    return dateTimeToMinutes(
+      entry.finalWakeDate||entry.sleepStartDate||String(entry.date||'').replaceAll('/','-'),
+      entry.finalWake
+    );
+  }
+
+  // 午睡是独立数据。只有在统计/显示时，才按真实日期时间归属。
+  function findNapTargetHistory(nap,entries=getHistory()){
+    const ns=napDateTime(nap);
+    if(ns===null)return null;
+
+    let best=null,bestEnd=-Infinity;
+
+    for(const entry of entries){
+      const mainStart=historyStartMinutes(entry);
+      const mainEnd=historyEndMinutes(entry);
+      if(mainStart===null||mainEnd===null)continue;
+
+      // 如果午睡时间落在主睡眠时间范围内，优先归入该主睡眠。
+      if(ns>=mainStart&&ns<=mainEnd)return entry;
+
+      // 正常情况：午睡发生在最近一条已完成主睡眠之后。
+      if(mainEnd<=ns&&mainEnd>bestEnd){
+        best=entry;
+        bestEnd=mainEnd;
+      }
+    }
     return best;
   }
-  function entryBaseSleepMinutes(entry){
-    if(Number.isFinite(Number(entry.baseSleepMinutes)))return Number(entry.baseSleepMinutes);
-    const stored=parseDuration(entry.sleepDuration)||0;
-    const napSum=getNaps().filter(n=>n.sleepId===entry.id).reduce((s,n)=>s+(napDuration(n)||0),0);
-    return Math.max(0,stored-napSum);
+
+  function getNapsForEntry(entry,entries=getHistory()){
+    if(!entry)return [];
+    return getNaps().filter(n=>findNapTargetHistory(n,entries)?.id===entry.id);
   }
-  function napSumForEntry(entryId){return getNaps().filter(n=>n.sleepId===entryId).reduce((s,n)=>s+(napDuration(n)||0),0)}
+
+  function napSumForEntry(entryId,entries=getHistory()){
+    const entry=entries.find(e=>e.id===entryId);
+    return entry?getNapsForEntry(entry,entries).reduce((s,n)=>s+(napDuration(n)||0),0):0;
+  }
+
+  function entryBaseSleepMinutes(entry){
+    if(Number.isFinite(Number(entry.baseSleepMinutes)))
+      return Number(entry.baseSleepMinutes);
+
+    const stored=parseDuration(entry.sleepDuration)||0;
+    const oldNap=Number.isFinite(Number(entry.napMinutes))?Number(entry.napMinutes):0;
+    return Math.max(0,stored-oldNap);
+  }
+
   function syncHistoryNapTotals(){
-    const naps=getNaps(), entries=getHistory().map(e=>({...e}));
+    const entries=getHistory().map(e=>({...e}));
     let changed=false;
-    for(const e of entries){
-      const totalNap=napSumForEntryFix(naps,e.id);
-      const base=entryBaseSleepMinutes(e);
+
+    for(const entry of entries){
+      const totalNap=napSumForEntry(entry.id,entries);
+      const base=entryBaseSleepMinutes(entry);
       const total=base+totalNap;
-      const nextDuration=duration(total);
-      if(e.sleepDuration!==nextDuration || Number(e.napMinutes||0)!==totalNap || Number(e.baseSleepMinutes||0)!==base){e.sleepDuration=nextDuration;e.napMinutes=totalNap;e.napDuration=duration(totalNap);e.baseSleepMinutes=base;changed=true}
+
+      if(
+        entry.sleepDuration!==duration(total)||
+        Number(entry.napMinutes||0)!==totalNap||
+        String(entry.napDuration||'0分钟')!==duration(totalNap)||
+        Number(entry.baseSleepMinutes||0)!==base
+      ){
+        entry.sleepDuration=duration(total);
+        entry.napMinutes=totalNap;
+        entry.napDuration=duration(totalNap);
+        entry.baseSleepMinutes=base;
+        changed=true;
+      }
     }
+
     if(changed)localStorage.setItem(HISTORY_KEY,JSON.stringify(entries));
     return entries;
   }
-  function napSumForEntryFix(naps,id){return naps.filter(n=>n.sleepId===id).reduce((s,n)=>s+(napDuration(n)||0),0)}
-  function currentLatestCycle(){
-    const entries=getHistory();
-    if(!entries.length)return null;
-    return entries.slice().sort((a,b)=>{
-      const ae=historyEndMinutes(a)??-Infinity,be=historyEndMinutes(b)??-Infinity;return be-ae;
-    })[0];
+
+  function refreshAfterNapChange(){
+    syncHistoryNapTotals();
+
+    try{
+      const next=adaptiveTarget();
+      if(next!==null){
+        setTargetInputs(next);
+        saveCurrent();
+      }
+    }catch(e){}
+
+    renderHistory();
+    renderNaps();
+    updateDashboard();
+
+    const latest=getHistory().slice().sort(
+      (a,b)=>(historyEndMinutes(b)||0)-(historyEndMinutes(a)||0)
+    )[0];
+    if(latest)renderTimelineForEntry(latest);
   }
-  function napBelongsToDisplayedCycle(n){
-    const current=currentLatestCycle(); return !!current && n.sleepId===current.id;
+
+  function setNapStatus(text,type='ok'){
+    const el=$('napStatus');
+    if(!el)return;
+    el.textContent=text;
+    el.className='status nap-status '+(type==='error'?'drive-error':'');
+    el.classList.remove('hidden');
   }
-  function setNapStatus(text,type='ok'){const el=$('napStatus');if(!el)return;el.textContent=text;el.className='status nap-status '+(type==='error'?'drive-error':'');el.classList.remove('hidden')}
-  let napDraftState=null;
+
   function renderNaps(){
     syncHistoryNapTotals();
-    const list=$('napList'), all=getNaps();
+
+    const list=$('napList');
+    const all=getNaps()
+      .filter(n=>napDuration(n)!==null)
+      .sort((a,b)=>(napDateTime(b)||0)-(napDateTime(a)||0));
+
     list.replaceChildren();
+
     if(!all.length){
       list.innerHTML='<div class="nap-empty">还没有保存午睡记录。</div>';
     }else{
-      const sorted=all.slice().sort((a,b)=>(napDateTime(b)||0)-(napDateTime(a)||0));
       const count=document.createElement('div');
       count.className='small';
       count.style.margin='0 0 6px';
-      count.textContent=`已保存 ${sorted.length} 次午睡；点击“编辑”才展开详细时间。`;
+      count.textContent=`已保存 ${all.length} 次午睡；午睡独立保存，统计时自动按日期归属。`;
       list.appendChild(count);
-      sorted.forEach(n=>{
-        const item=document.createElement('div'); item.className='nap-item'; item.dataset.id=n.id;
-        const target=getHistory().find(e=>e.id===n.sleepId), mins=napDuration(n)||0;
-        const belongs=target?`归入 ${formatMonthDay(target.date)} 主睡眠`:'未归属主睡眠';
-        const start=n.startDate?`${formatMonthDay(n.startDate)} ${n.startTime||'--:--'}`:(n.startTime||'--:--'), end=n.endDate?`${formatMonthDay(n.endDate)} ${n.endTime||'--:--'}`:(n.endTime||'--:--');
-        item.innerHTML=`<div class="nap-summary"><div class="nap-summary-main"><div class="nap-summary-time"><span class="sun">☀️</span><span>${start} → ${end}</span></div><div class="nap-summary-meta">${belongs}</div></div><div class="nap-summary-duration">${duration(mins)}</div><div class="nap-summary-actions"><button type="button" class="compact nap-edit">编辑</button><button type="button" class="danger compact nap-delete">删除</button></div></div>`;
+
+      all.forEach(n=>{
+        const item=document.createElement('div');
+        item.className='nap-item';
+        item.dataset.id=n.id;
+
+        const mins=napDuration(n)||0;
+        const start=n.startDate?`${formatMonthDay(n.startDate)} ${n.startTime||'--:--'}`:(n.startTime||'--:--');
+        const end=n.endDate?`${formatMonthDay(n.endDate)} ${n.endTime||'--:--'}`:(n.endTime||'--:--');
+
+        item.innerHTML=
+          `<div class="nap-summary">
+            <div class="nap-summary-main">
+              <div class="nap-summary-time"><span class="sun">☀️</span><span>${start} → ${end}</span></div>
+            </div>
+            <div class="nap-summary-duration">${duration(mins)}</div>
+            <div class="nap-summary-actions">
+              <button type="button" class="compact nap-edit">编辑</button>
+              <button type="button" class="danger compact nap-delete">删除</button>
+            </div>
+          </div>`;
+
         item.querySelector('.nap-edit').addEventListener('click',()=>openNapEditor(item,n));
         item.querySelector('.nap-delete').addEventListener('click',()=>{
           if(!confirm('确定删除这次午睡吗？'))return;
           saveNaps(getNaps().filter(x=>x.id!==n.id));
-          syncHistoryNapTotals(); renderHistory(); renderNaps(); updateDashboard();
+          refreshAfterNapChange();
           setNapStatus('午睡已删除','ok');
         });
+
         list.appendChild(item);
       });
     }
-    const latest=currentLatestCycle(); $('napTotal').textContent=duration(latest?napSumForEntry(latest.id):0);
+
+    $('napTotal').textContent=duration(
+      all.reduce((s,n)=>s+(napDuration(n)||0),0)
+    );
   }
 
   function openNapEditor(item,n){
     if(item.querySelector('.nap-editor'))return;
+
     const existing=document.querySelector('.nap-item .nap-editor');
     if(existing){
       renderNaps();
       item=document.querySelector(`.nap-item[data-id="${CSS.escape(n.id)}"]`);
       if(!item)return;
     }
-    const state={startDate:n.startDate||todayDate(),endDate:n.endDate||n.startDate||todayDate()};
-    const editor=document.createElement('div'); editor.className='nap-editor';
-    editor.innerHTML=`<div class="nap-grid"><label>开始日期<input type="date" class="nap-sd" value="${state.startDate}"></label><label>开始时间<input type="time" class="nap-st" value="${n.startTime||''}"></label><label>结束日期<input type="date" class="nap-ed" value="${state.endDate}"></label><label>结束时间<input type="time" class="nap-et" value="${n.endTime||''}"></label></div><div class="nap-duration">午睡时长：${duration(napDuration(n)||0)}</div><div class="nap-belongs">开始日期和结束日期请自行输入，可跨天。</div><div class="nap-actions"><button type="button" class="primary nap-save-edit">保存修改</button><button type="button" class="secondary nap-cancel-edit">取消</button></div>`;
+
+    const startDate=n.startDate||todayDate();
+    const endDate=n.endDate||n.startDate||todayDate();
+
+    const editor=document.createElement('div');
+    editor.className='nap-editor';
+    editor.innerHTML=
+      `<div class="nap-grid">
+        <label>开始日期<input type="date" class="nap-sd" value="${startDate}"></label>
+        <label>开始时间<input type="time" class="nap-st" value="${n.startTime||''}"></label>
+        <label>结束日期<input type="date" class="nap-ed" value="${endDate}"></label>
+        <label>结束时间<input type="time" class="nap-et" value="${n.endTime||''}"></label>
+      </div>
+      <div class="nap-duration">午睡时长：${duration(napDuration(n)||0)}</div>
+      <div class="nap-belongs">午睡独立保存；日期和时间由你自己填写。</div>
+      <div class="nap-actions">
+        <button type="button" class="primary nap-save-edit">保存修改</button>
+        <button type="button" class="secondary nap-cancel-edit">取消</button>
+      </div>`;
+
     item.appendChild(editor);
+
     const validate=()=>{
-      state.startDate=editor.querySelector('.nap-sd').value;
-      state.endDate=editor.querySelector('.nap-ed').value;
-      const draft={startDate:state.startDate,startTime:editor.querySelector('.nap-st').value,endDate:state.endDate,endTime:editor.querySelector('.nap-et').value};
+      const draft={
+        startDate:editor.querySelector('.nap-sd').value,
+        startTime:editor.querySelector('.nap-st').value,
+        endDate:editor.querySelector('.nap-ed').value,
+        endTime:editor.querySelector('.nap-et').value
+      };
       const m=napDuration(draft);
-      editor.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;
+      editor.querySelector('.nap-duration').textContent=
+        m===null?'请填写完整且有效的午睡时间':`午睡时长：${duration(m)}`;
       return m!==null;
     };
-    editor.querySelectorAll('input').forEach(el=>el.addEventListener('input',validate));
+
+    editor.querySelectorAll('input').forEach(el=>{
+      el.addEventListener('input',validate);
+      el.addEventListener('change',validate);
+    });
+
     editor.querySelector('.nap-cancel-edit').addEventListener('click',()=>renderNaps());
+
     editor.querySelector('.nap-save-edit').addEventListener('click',()=>{
-      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始/结束日期和时间','error');return}
-      const updated={...n,startDate:state.startDate,startTime:editor.querySelector('.nap-st').value,endDate:state.endDate,endTime:editor.querySelector('.nap-et').value};
-      const m=napDuration(updated); if(m===null){setNapStatus('无法保存：请填写有效的午睡时间','error');return}
-      const target=findNapTargetHistory(updated); if(!target){setNapStatus('无法归属：请先保存主睡眠记录，再保存这次午睡','error');return}
-      updated.sleepId=target.id;
+      if(!validate()){
+        setNapStatus('无法保存：请填写完整的午睡开始/结束日期和时间','error');
+        return;
+      }
+
+      const updated={...n};
+      updated.startDate=editor.querySelector('.nap-sd').value;
+      updated.startTime=editor.querySelector('.nap-st').value;
+      updated.endDate=editor.querySelector('.nap-ed').value;
+      updated.endTime=editor.querySelector('.nap-et').value;
+
       saveNaps(getNaps().map(x=>x.id===n.id?updated:x));
-      syncHistoryNapTotals(); renderHistory(); renderNaps(); updateDashboard(); renderTimelineForEntry(target);
-      setNapStatus(`午睡已保存，已计入 ${formatMonthDay(target.date)} 的主睡眠`,'ok');
+      refreshAfterNapChange();
+      setNapStatus('午睡修改已保存','ok');
     });
   }
+
   function createNapDraft(){
-    const item=document.createElement('div'), draftId=`draft-${Date.now()}-${Math.random()}`, defaultDate=todayDate(), state={startDate:defaultDate,endDate:defaultDate};
-    item.className='nap-item nap-draft'; item.dataset.id=draftId;
-    item.innerHTML=`<div class="nap-head"><strong>新午睡</strong><button type="button" class="danger compact nap-cancel">取消</button></div><div class="nap-grid"><label>开始日期<input type="date" class="nap-sd" value="${defaultDate}"></label><label>开始时间<input type="time" class="nap-st"></label><label>结束日期<input type="date" class="nap-ed" value="${defaultDate}"></label><label>结束时间<input type="time" class="nap-et"></label></div><div class="nap-duration">请填写完整日期和时间后保存</div><div class="nap-belongs">开始日期和结束日期请自行输入，可跨天。</div><div class="nap-actions"><button type="button" class="primary nap-save-new">保存午睡</button></div>`;
-    $('napList').prepend(item); napDraftState=state;
-    const validate=()=>{state.startDate=item.querySelector('.nap-sd').value;state.endDate=item.querySelector('.nap-ed').value;const n={startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};const m=napDuration(n);item.querySelector('.nap-duration').textContent=m===null?'请填写完整且有效的午睡日期和时间':`午睡时长：${duration(m)}`;return m!==null};
-    item.querySelectorAll('input').forEach(el=>el.addEventListener('input',validate));
-    item.querySelector('.nap-cancel').addEventListener('click',()=>{napDraftState=null;item.remove()});
+    if(document.querySelector('.nap-draft'))return;
+
+    const item=document.createElement('div');
+    const draftId=`draft-${Date.now()}-${Math.random()}`;
+    const today=todayDate();
+
+    item.className='nap-item nap-draft';
+    item.dataset.id=draftId;
+    item.innerHTML=
+      `<div class="nap-head">
+        <strong>新午睡</strong>
+        <button type="button" class="danger compact nap-cancel">取消</button>
+      </div>
+      <div class="nap-grid">
+        <label>开始日期<input type="date" class="nap-sd" value="${today}"></label>
+        <label>开始时间<input type="time" class="nap-st"></label>
+        <label>结束日期<input type="date" class="nap-ed" value="${today}"></label>
+        <label>结束时间<input type="time" class="nap-et"></label>
+      </div>
+      <div class="nap-duration">请填写完整日期和时间后保存</div>
+      <div class="nap-belongs">午睡独立保存；可以先保存主睡眠，也可以先保存午睡。</div>
+      <div class="nap-actions">
+        <button type="button" class="primary nap-save-new">保存午睡</button>
+      </div>`;
+
+    $('napList').prepend(item);
+
+    const validate=()=>{
+      const draft={
+        startDate:item.querySelector('.nap-sd').value,
+        startTime:item.querySelector('.nap-st').value,
+        endDate:item.querySelector('.nap-ed').value,
+        endTime:item.querySelector('.nap-et').value
+      };
+      const m=napDuration(draft);
+      item.querySelector('.nap-duration').textContent=
+        m===null?'请填写完整且有效的午睡日期和时间':`午睡时长：${duration(m)}`;
+      return m!==null;
+    };
+
+    item.querySelectorAll('input').forEach(el=>{
+      el.addEventListener('input',validate);
+      el.addEventListener('change',validate);
+    });
+
+    item.querySelector('.nap-cancel').addEventListener('click',()=>item.remove());
+
     item.querySelector('.nap-save-new').addEventListener('click',()=>{
-      if(!validate()){setNapStatus('无法保存：请填写完整的午睡开始/结束日期和时间','error');return}
-      const n={id:`${Date.now()}-${Math.random()}`,startDate:state.startDate,startTime:item.querySelector('.nap-st').value,endDate:state.endDate,endTime:item.querySelector('.nap-et').value};
-      const m=napDuration(n); if(m===null){setNapStatus('无法保存：请填写有效的午睡时间','error');return}
-      const target=findNapTargetHistory(n); if(!target){setNapStatus('无法保存：请先保存主睡眠记录，系统才能确定这次午睡归属','error');return}
-      n.sleepId=target.id; saveNaps([...getNaps(),n]); syncHistoryNapTotals(); napDraftState=null; item.remove(); renderHistory(); renderNaps(); updateDashboard(); renderTimelineForEntry(target); setNapStatus(`午睡已保存，${duration(m)} 已计入 ${formatMonthDay(target.date)} 的睡眠`,'ok');
+      if(!validate()){
+        setNapStatus('无法保存：请填写完整的午睡开始/结束日期和时间','error');
+        return;
+      }
+
+      const n={
+        id:`${Date.now()}-${Math.random()}`,
+        startDate:item.querySelector('.nap-sd').value,
+        startTime:item.querySelector('.nap-st').value,
+        endDate:item.querySelector('.nap-ed').value,
+        endTime:item.querySelector('.nap-et').value
+      };
+
+      saveNaps([...getNaps(),n]);
+      item.remove();
+      refreshAfterNapChange();
+      setNapStatus(`午睡已保存 · ${duration(napDuration(n))}`,'ok');
     });
   }
+
   function getTargetMinutes(){const h=Number($('targetSleepHours').value),m=Number($('targetSleepMinutes').value);if(!Number.isInteger(h)||h<0||h>24||!Number.isInteger(m)||m<0||m>59||(h===0&&m===0))throw new Error('请输入正确的目标睡眠时间');return h*60+m;}
   function longTermMinutes(){const h=Number($('longTermHours').value),m=Number($('longTermMinutes').value);if(!Number.isInteger(h)||h<0||h>24||!Number.isInteger(m)||m<0||m>59||(h===0&&m===0))throw new Error('请输入正确的长期睡眠目标');return h*60+m;}
   function parseDuration(t){const m=String(t||'').match(/^(?:(\d+)小时)?(?:(\d+)分钟)?$/);return m&& (m[1]||m[2]) ? Number(m[1]||0)*60+Number(m[2]||0):null;}
@@ -689,7 +949,7 @@ function driveBindUI(){
       item.innerHTML=`<div class="item-head"><strong>📅 ${formatMonthDay(entry.date)} · ${entry.sleepStart} → ${entry.finalWake}</strong><button type="button" class="danger compact">删除</button></div><div class="history-meta">实际睡眠 ${entry.sleepDuration} · 清醒／起夜 ${entry.awakeDuration} · ${entry.wakeCount} 次起夜 · 午睡 ${entry.napDuration||'0分钟'}</div>`;
       item.querySelector('button').addEventListener('click',()=>{
         if(confirm('确定删除这条已完成的睡眠记录吗？')){
-          localStorage.setItem(HISTORY_KEY,JSON.stringify(getHistory().filter(x=>x.id!==entry.id))); saveNaps(getNaps().filter(n=>n.sleepId!==entry.id)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange();
+          localStorage.setItem(HISTORY_KEY,JSON.stringify(getHistory().filter(x=>x.id!==entry.id))); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange();
           const next=adaptiveTarget();
           if(next!==null) setTargetInputs(next);
           renderHistory();
@@ -699,7 +959,7 @@ function driveBindUI(){
     });
     updateDashboard();
   }
-  function saveCompleted() { const data=calculateActual(); if(!data) return; const startDate=$('sleepStartDate').value.replaceAll('-','/'); const entry={id:`${Date.now()}-${Math.random()}`,date:startDate,sleepStart:$('sleepStart').value,finalWake:$('finalWake').value,sleepStartDate:$('sleepStartDate').value,finalWakeDate:$('finalWakeDate').value,sleepDuration:duration(data.sleep),awakeDuration:duration(data.awake),wakeCount:data.periods.length,baseSleepMinutes:data.sleep,napMinutes:0,napDuration:'0分钟',wakePeriods:wakeRows().map(row=>({wake:row.querySelector('.wake-time').value,again:row.querySelector('.again-time').value,wakeDate:row.querySelector('.wake-date').value,againDate:row.querySelector('.again-date').value}))}; const entries=getHistory(); const duplicate=entries.some(x=>x.date===entry.date&&x.sleepStart===entry.sleepStart&&x.finalWake===entry.finalWake); if(duplicate){alert('这条睡眠记录已经保存过了。');return;} entries.unshift(entry); localStorage.setItem(HISTORY_KEY,JSON.stringify(entries)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); const next=adaptiveTarget(); if(next!==null){setTargetInputs(next); saveCurrent(); const target=longTermMinutes();
+  function saveCompleted() { const data=calculateActual(); if(!data) return; const startDate=$('sleepStartDate').value.replaceAll('-','/'); const entry={id:`${Date.now()}-${Math.random()}`,date:startDate,sleepStart:$('sleepStart').value,finalWake:$('finalWake').value,sleepStartDate:$('sleepStartDate').value,finalWakeDate:$('finalWakeDate').value,sleepDuration:duration(data.sleep),awakeDuration:duration(data.awake),wakeCount:data.periods.length,baseSleepMinutes:data.sleep,napMinutes:0,napDuration:'0分钟',wakePeriods:wakeRows().map(row=>({wake:row.querySelector('.wake-time').value,again:row.querySelector('.again-time').value,wakeDate:row.querySelector('.wake-date').value,againDate:row.querySelector('.again-date').value}))}; const entries=getHistory(); const duplicate=entries.some(x=>x.date===entry.date&&x.sleepStart===entry.sleepStart&&x.finalWake===entry.finalWake); if(duplicate){alert('这条睡眠记录已经保存过了。');return;} entries.unshift(entry); localStorage.setItem(HISTORY_KEY,JSON.stringify(entries)); syncHistoryNapTotals(); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); const next=adaptiveTarget(); if(next!==null){setTargetInputs(next); saveCurrent(); const target=longTermMinutes();
       const vals=getHistory().map(x=>parseDuration(x.sleepDuration)).filter(v=>v!==null);
       const balance=vals.reduce((sum,actual)=>sum+(actual-target),0);
       const balanceText=balance===0?'刚好达到长期目标':balance>0?`累计多睡 ${duration(balance)}`:`累计少睡 ${duration(-balance)}`;
@@ -709,7 +969,7 @@ ${balanceText}。
 长期目标 ${duration(target)}。
 下一次目标睡眠时间调整为 ${duration(next)}。`);} renderHistory(); renderNaps(); renderTimelineForEntry(entry); }
   function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function exportData(){const payload={app:'sleep-calculator',version:'V10.5',exportedAt:new Date().toISOString(),current:null,history:getHistory(),naps:getNaps()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
+  function exportData(){const payload={app:'sleep-calculator',version:'V10.7',exportedAt:new Date().toISOString(),current:null,history:getHistory(),naps:getNaps()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
   function normalizeImportedHistory(raw){if(!Array.isArray(raw))throw new Error('备份中的历史记录格式不正确');return raw.filter(x=>x&&typeof x==='object').map(x=>({id:String(x.id||`${Date.now()}-${Math.random()}`),date:String(x.date||''),sleepStart:String(x.sleepStart||''),sleepStartDate:String(x.sleepStartDate||''),finalWake:String(x.finalWake||''),finalWakeDate:String(x.finalWakeDate||''),sleepDuration:String(x.sleepDuration||''),awakeDuration:String(x.awakeDuration||'0分钟'),wakeCount:Number.isFinite(Number(x.wakeCount))?Number(x.wakeCount):0,baseSleepMinutes:Number.isFinite(Number(x.baseSleepMinutes))?Number(x.baseSleepMinutes):null,napMinutes:Number.isFinite(Number(x.napMinutes))?Number(x.napMinutes):0,napDuration:String(x.napDuration||'0分钟')})).filter(x=>x.date&&x.sleepStart&&x.finalWake&&parseDuration(x.sleepDuration)!==null);}
   function importDataFromText(text){let data;try{data=JSON.parse(text);}catch{throw new Error('无法读取备份：JSON 文件格式错误。');}const importedHistory=normalizeImportedHistory(data.history); const importedNaps=Array.isArray(data.naps)?data.naps:[];let importedCurrent=null;if(data.current!==null&&data.current!==undefined){if(typeof data.current!=='object')throw new Error('备份中的当前记录格式不正确');importedCurrent=data.current;}if(!confirm(`准备导入 ${importedHistory.length} 条历史记录。\n\n导入后会覆盖当前设备上的历史记录和当前记录。\n\n确定继续吗？`))return;localStorage.setItem(HISTORY_KEY,JSON.stringify(importedHistory)); localStorage.setItem(NAP_KEY,JSON.stringify(importedNaps)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); if(importedCurrent)localStorage.setItem(CURRENT_KEY,JSON.stringify(importedCurrent));else localStorage.removeItem(CURRENT_KEY);location.reload();}
   function exportCsv(){const entries=getHistory();if(!entries.length){alert('目前没有可导出的历史记录。');return;}const header=['日期','首次入睡日期','首次入睡','最终起床日期','最终起床','实际睡眠','清醒/起夜','起夜次数','午睡'];const rows=entries.map(x=>[x.date,x.sleepStartDate||x.date.replaceAll('/','-'),x.sleepStart,x.finalWakeDate||'',x.finalWake,x.sleepDuration,x.awakeDuration,x.wakeCount,x.napDuration||'0分钟']);const csv='\ufeff'+[header,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');downloadFile(`sleep-history-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8');setStatus('📊 历史记录 CSV 已导出');}
@@ -739,7 +999,7 @@ ${balanceText}。
     const entries=syncHistoryNapTotals().slice().sort((a,b)=>(dateTimeToMinutes(b.finalWakeDate,b.finalWake)||0)-(dateTimeToMinutes(a.finalWakeDate,a.finalWake)||0));
     const latest=entries[0];
     if(!latest){box.innerHTML='<div class="empty">还没有完成的睡眠记录。完成一条主睡眠后，这里会自动显示结果。</div>';return;}
-    const naps=getNaps().filter(n=>n.sleepId===latest.id);
+    const naps=getNapsForEntry(latest);
     const napTotal=naps.reduce((s,n)=>s+(napDuration(n)||0),0);
     const actual=parseDuration(latest.sleepDuration)||0, target=longTermMinutes(), balance=actual-target;
     const base=Number.isFinite(Number(latest.baseSleepMinutes))?Number(latest.baseSleepMinutes):Math.max(0,actual-napTotal);
@@ -803,11 +1063,11 @@ ${balanceText}。
 if('serviceWorker' in navigator){
   window.addEventListener('load',async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=10.4',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=10.7',{updateViaCache:'none'});
       await reg.update();
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.6')){
-          sessionStorage.setItem('sleep-sw-reloaded-v10.6','1');
+        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.7')){
+          sessionStorage.setItem('sleep-sw-reloaded-v10.7','1');
           location.reload();
         }
       });
