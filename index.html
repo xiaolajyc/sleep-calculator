@@ -14,13 +14,6 @@
 html,body{touch-action:pan-x pan-y;-ms-touch-action:pan-x pan-y}input,select,textarea,button{touch-action:manipulation}.no-zoom{touch-action:pan-x pan-y}
 @media(max-width:520px){.nap-grid{grid-template-columns:1fr}.nap-actions{grid-template-columns:1fr}}
 .segment.gap{background:transparent !important}
-
-/* V10.8.2.1 compact sleep trend */
-#sleepTrend{gap:8px;overflow-x:auto;padding:4px 2px 6px;justify-content:flex-start}
-#sleepTrend .sleep-bar-wrap{flex:0 0 42px;width:42px;min-width:42px;max-width:42px;box-sizing:border-box}
-#sleepTrend .sleep-value{font-size:10px;line-height:12px;white-space:nowrap;height:14px;display:block;text-align:center;overflow:hidden}
-#sleepTrend .sleep-label{font-size:9px;line-height:11px;white-space:nowrap;height:12px;display:block;text-align:center;overflow:hidden}
-#sleepTrend .sleep-bar{min-height:3px}
 </style>
 <style id="v8-3-google-drive-style">
 .drive-sync-card{margin-top:14px}
@@ -155,9 +148,9 @@ body{padding-bottom:82px}
 </div>
 <label class="drive-auto"><input id="driveAutoSync" type="checkbox"/><span>数据修改后自动同步</span></label>
 <div class="drive-note" id="driveNote">数据仍同时保存在本机浏览器。首次连接会弹出 Google 授权窗口。</div>
-</section><section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V10.8.2</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section></section><nav aria-label="主导航" class="bottom-nav">
+</section><section class="card settings-card"><div class="section-head"><div class="step">⚙</div><div><h2 class="section-title">设置</h2><p class="section-sub">应用信息与版本</p></div></div><div class="settings-row"><span>应用版本</span><strong>V10.8.1</strong></div><div class="settings-row"><span>数据存储</span><span class="setting-muted">本设备浏览器本地存储</span></div></section><section class="card tip"><div class="tip-content"><div><div class="tip-title">🌿 小贴士</div><div class="small">规律的作息不是束缚，而是给生活更多的可能。</div></div><div class="cat">😴</div></div></section></section><nav aria-label="主导航" class="bottom-nav">
 <button class="nav-item" data-tab-target="today" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20.2 15.1A8.2 8.2 0 0 1 8.9 3.8 8.2 8.2 0 1 0 20.2 15.1Z"/><path d="M17.2 4.2v2.2M18.3 5.3h-2.2"/></svg></span><small>今日</small></button>
-<button class="nav-item active" data-tab-target="record" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.5h17v7.2h-17z"/><path d="M5.5 11.5V10.8.2a2 2 0 0 1 2-2h3.2a2 2 0 0 1 2 2v2.8"/><path d="M14 8.2h5.5"/><path d="M16.75 5.45v5.5"/></svg></span><small>记录</small></button>
+<button class="nav-item active" data-tab-target="record" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 11.5h17v7.2h-17z"/><path d="M5.5 11.5V10.8.1a2 2 0 0 1 2-2h3.2a2 2 0 0 1 2 2v2.8"/><path d="M14 8.2h5.5"/><path d="M16.75 5.45v5.5"/></svg></span><small>记录</small></button>
 <button class="nav-item" data-tab-target="history" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.7v4.8l3.1 1.8"/><path d="M4.5 5.7 3.2 4.4"/></svg></span><small>历史</small></button>
 <button class="nav-item" data-tab-target="stats" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 19V10"/><path d="M12 19V5"/><path d="M19 19v-7"/><path d="M3.8 19.5h16.4"/></svg></span><small>统计</small></button>
 <button class="nav-item" data-tab-target="settings" type="button"><span class="tab-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h10"/><path d="M18 7h2"/><circle cx="16" cy="7" r="2"/><path d="M4 17h2"/><path d="M10 17h10"/><circle cx="8" cy="17" r="2"/></svg></span><small>设置</small></button>
@@ -246,7 +239,7 @@ function drivePayload(){
   try{current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null')}catch{}
   return {
     schema:'sleep-calculator-sync-v1',
-    appVersion:'V10.8.2',
+    appVersion:'V10.8.1',
     updatedAt:new Date().toISOString(),
     current,
     history:window.sleepAppStore.getHistory(),
@@ -1026,7 +1019,7 @@ ${balanceText}。
 长期目标 ${duration(target)}。
 下一次目标睡眠时间调整为 ${duration(next)}。`);} renderHistory(); renderNaps(); renderTimelineForEntry(entry); }
   function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function exportData(){const payload={app:'sleep-calculator',version:'V10.8.2',exportedAt:new Date().toISOString(),current:null,history:getHistory(),naps:getNaps()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
+  function exportData(){const payload={app:'sleep-calculator',version:'V10.8.1',exportedAt:new Date().toISOString(),current:null,history:getHistory(),naps:getNaps()};try{payload.current=JSON.parse(localStorage.getItem(CURRENT_KEY)||'null');}catch{}downloadFile(`sleep-calculator-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(payload,null,2),'application/json;charset=utf-8');setStatus('📦 数据备份已导出');}
   function normalizeImportedHistory(raw){if(!Array.isArray(raw))throw new Error('备份中的历史记录格式不正确');return raw.filter(x=>x&&typeof x==='object').map(x=>({id:String(x.id||`${Date.now()}-${Math.random()}`),date:String(x.date||''),sleepStart:String(x.sleepStart||''),sleepStartDate:String(x.sleepStartDate||''),finalWake:String(x.finalWake||''),finalWakeDate:String(x.finalWakeDate||''),sleepDuration:String(x.sleepDuration||''),awakeDuration:String(x.awakeDuration||'0分钟'),wakeCount:Number.isFinite(Number(x.wakeCount))?Number(x.wakeCount):0,baseSleepMinutes:Number.isFinite(Number(x.baseSleepMinutes))?Number(x.baseSleepMinutes):null,napMinutes:Number.isFinite(Number(x.napMinutes))?Number(x.napMinutes):0,napDuration:String(x.napDuration||'0分钟')})).filter(x=>x.date&&x.sleepStart&&x.finalWake&&parseDuration(x.sleepDuration)!==null);}
   function importDataFromText(text){let data;try{data=JSON.parse(text);}catch{throw new Error('无法读取备份：JSON 文件格式错误。');}const importedHistory=normalizeImportedHistory(data.history); const importedNaps=Array.isArray(data.naps)?data.naps:[];let importedCurrent=null;if(data.current!==null&&data.current!==undefined){if(typeof data.current!=='object')throw new Error('备份中的当前记录格式不正确');importedCurrent=data.current;}if(!confirm(`准备导入 ${importedHistory.length} 条历史记录。\n\n导入后会覆盖当前设备上的历史记录和当前记录。\n\n确定继续吗？`))return;localStorage.setItem(HISTORY_KEY,JSON.stringify(importedHistory)); localStorage.setItem(NAP_KEY,JSON.stringify(importedNaps)); if(typeof driveMarkLocalChange==='function')driveMarkLocalChange(); if(importedCurrent)localStorage.setItem(CURRENT_KEY,JSON.stringify(importedCurrent));else localStorage.removeItem(CURRENT_KEY);location.reload();}
   function exportCsv(){const entries=getHistory();if(!entries.length){alert('目前没有可导出的历史记录。');return;}const header=['日期','首次入睡日期','首次入睡','最终起床日期','最终起床','实际睡眠','清醒/起夜','起夜次数','午睡'];const rows=entries.map(x=>[x.date,x.sleepStartDate||x.date.replaceAll('/','-'),x.sleepStart,x.finalWakeDate||'',x.finalWake,x.sleepDuration,x.awakeDuration,x.wakeCount,x.napDuration||'0分钟']);const csv='\ufeff'+[header,...rows].map(row=>row.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');downloadFile(`sleep-history-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8');setStatus('📊 历史记录 CSV 已导出');}
@@ -1129,11 +1122,11 @@ ${balanceText}。
 if('serviceWorker' in navigator){
   window.addEventListener('load',async()=>{
     try{
-      const reg=await navigator.serviceWorker.register('./sw.js?v=10.8.2',{updateViaCache:'none'});
+      const reg=await navigator.serviceWorker.register('./sw.js?v=10.8.1',{updateViaCache:'none'});
       await reg.update();
       navigator.serviceWorker.addEventListener('controllerchange',()=>{
-        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.8.2')){
-          sessionStorage.setItem('sleep-sw-reloaded-v10.8.2','1');
+        if(!sessionStorage.getItem('sleep-sw-reloaded-v10.8.1')){
+          sessionStorage.setItem('sleep-sw-reloaded-v10.8.1','1');
           location.reload();
         }
       });
